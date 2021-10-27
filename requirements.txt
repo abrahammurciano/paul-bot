@@ -1,0 +1,2 @@
+disnake==2.1.5
+asyncpg==0.24.0
