@@ -1,10 +1,12 @@
-from typing import Iterable, Optional, Set, Tuple
+from typing import Iterable, Optional, Set, Tuple, Union, TYPE_CHECKING
 import asyncpg
-from database_bot import DatabaseBot
 import sql
 import disnake
 from .option import Option
 from datetime import datetime
+
+if TYPE_CHECKING:
+	from paul import Paul
 
 
 class Poll:
@@ -14,14 +16,14 @@ class Poll:
 		question: str,
 		options: Iterable[Option],
 		message: disnake.Message,
-		author: Optional[disnake.Member],
+		author: Optional[Union[disnake.User, disnake.Member]],
 		expires: datetime,
 	):
 		self.__poll_id = poll_id
 		self.__question = question
 		self.__options = tuple(options)
 		self.__message = message
-		self.author = author
+		self.__author = author
 		self.__expires = expires
 
 	@property
@@ -45,7 +47,7 @@ class Poll:
 		return self.__message
 
 	@property
-	def author(self) -> Optional[disnake.Member]:
+	def author(self) -> Optional[Union[disnake.User, disnake.Member]]:
 		"""The member who created the poll, or None if he's no longer in the guild."""
 		return self.__author
 
@@ -54,6 +56,11 @@ class Poll:
 		"""The time when the poll no longer accepts votes."""
 		return self.__expires
 
+	@property
+	def vote_count(self) -> int:
+		"""Get the sum of the number of votes cast for each option."""
+		return sum(option.vote_count for option in self.options)
+
 	@classmethod
 	async def create_poll(
 		cls,
@@ -61,9 +68,10 @@ class Poll:
 		question: str,
 		option_labels: Iterable[str],
 		message: disnake.Message,
-		author: disnake.Member,
+		author: Union[disnake.User, disnake.Member],
 		expires: datetime,
 	) -> "Poll":
+		assert message.guild is not None, "The poll's message must be in a guild."
 		poll_id = await sql.insert(
 			conn,
 			"polls",
@@ -75,11 +83,13 @@ class Poll:
 			author=author.id,
 			expires=expires,
 		)
-		options = (Option.create_option(label, poll_id) for label in option_labels)
+		options = [
+			await Option.create_option(conn, label, poll_id) for label in option_labels
+		]
 		return Poll(poll_id, question, options, message, author, expires)
 
 	@classmethod
-	async def get_active_polls(cls, bot: DatabaseBot) -> Set["Poll"]:
+	async def get_active_polls(cls, bot: "Paul") -> Set["Poll"]:
 		"""Get the polls which have not yet expired.
 
 		Returns:
@@ -90,17 +100,22 @@ class Poll:
 			"active_polls_view",
 			("id", "question", "message", "channel", "guild", "expires"),
 		)
-		return {
-			cls(
-				r["id"],
-				r["question"],
-				await Option.get_options_of_poll(r["id"]),
-				await __fetch_message(bot, r["message"], r["channel"], r["guild"]),
-				await bot.get_guild(r["guild"]).get_member(r["author"]),
-				r["expires"],
-			)
-			for r in records
-		}
+		polls = set()
+		for r in records:
+			if message := await __fetch_message(
+				bot, r["message"], r["channel"], r["guild"]
+			):
+				polls.add(
+					cls(
+						r["id"],
+						r["question"],
+						await Option.get_options_of_poll(bot.conn, r["id"]),
+						message,
+						await bot.get_guild(r["guild"]).get_member(r["author"]),
+						r["expires"],
+					)
+				)
+		return polls
 
 
 async def __fetch_message(

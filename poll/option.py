@@ -1,4 +1,6 @@
 from typing import Iterable, List, Optional, Set
+
+import asyncpg
 import sql
 
 
@@ -45,11 +47,16 @@ class Option:
 		"""The set of IDs of members who voted on this option."""
 		return self.__votes.copy()
 
-	async def add_vote(self, voter_id: int):
-		await sql.insert("votes", option_id=self.option_id, voter_id=voter_id)
+	@property
+	def vote_count(self) -> int:
+		"""Get the number of votes for this option."""
+		return len(self.__votes)
+
+	async def add_vote(self, conn: asyncpg.Connection, voter_id: int):
+		await sql.insert(conn, "votes", option_id=self.option_id, voter_id=voter_id)
 
 	@classmethod
-	async def get_voters(cls, option_id: int) -> Set[int]:
+	async def get_voters(cls, conn: asyncpg.Connection, option_id: int) -> Set[int]:
 		"""Fetch the IDs of all the voters for a given option from the database.
 
 		Args:
@@ -60,11 +67,15 @@ class Option:
 		"""
 		return {
 			r["voter_id"]
-			for r in await sql.select.many("votes", ("voter_id",), option_id=option_id)
+			for r in await sql.select.many(
+				conn, "votes", ("voter_id",), option_id=option_id
+			)
 		}
 
 	@classmethod
-	async def create_option(cls, label: str, poll_id: int) -> "Option":
+	async def create_option(
+		cls, conn: asyncpg.Connection, label: str, poll_id: int
+	) -> "Option":
 		"""Create a new Option and add it to the database.
 
 		Args:
@@ -75,21 +86,23 @@ class Option:
 			Option: The new Option object.
 		"""
 		option_id = await sql.insert(
-			"options", returning="id", label=label, poll_id=poll_id
+			conn, "options", returning="id", label=label, poll_id=poll_id
 		)
 		return Option(option_id, label, ())
 
 	@classmethod
-	async def get_options_of_poll(cls, poll_id: int) -> List["Option"]:
+	async def get_options_of_poll(
+		cls, conn: asyncpg.Connection, poll_id: int
+	) -> List["Option"]:
 		"""Get the options of a poll given its ID.
 
 		Returns:
 			List[Option]: A list of Option objects belonging to the given poll.
 		"""
 		records = await sql.select.many(
-			"options", ("id", "label", "author"), poll_id=poll_id
+			conn, "options", ("id", "label", "author"), poll_id=poll_id
 		)
 		return [
-			cls(r["id"], r["label"], await cls.get_voters(r["id"]), r["author"])
+			cls(r["id"], r["label"], await cls.get_voters(conn, r["id"]), r["author"])
 			for r in records
 		]
