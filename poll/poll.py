@@ -17,7 +17,7 @@ class Poll:
 		options: Iterable[Option],
 		message: disnake.Message,
 		author: Optional[Union[disnake.User, disnake.Member]],
-		expires: datetime,
+		expires: Optional[datetime],
 	):
 		self.__poll_id = poll_id
 		self.__question = question
@@ -52,8 +52,8 @@ class Poll:
 		return self.__author
 
 	@property
-	def expires(self) -> datetime:
-		"""The time when the poll no longer accepts votes."""
+	def expires(self) -> Optional[datetime]:
+		"""The time when the poll no longer accepts votes, or None if it doesn't expire."""
 		return self.__expires
 
 	@property
@@ -69,7 +69,7 @@ class Poll:
 		option_labels: Iterable[str],
 		message: disnake.Message,
 		author: Union[disnake.User, disnake.Member],
-		expires: datetime,
+		expires: Optional[datetime],
 	) -> "Poll":
 		assert message.guild is not None, "The poll's message must be in a guild."
 		poll_id = await sql.insert(
