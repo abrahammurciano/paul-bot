@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable, Iterable, Tuple, TypeVar
 import asyncpg
 from . import util
 
@@ -22,10 +22,10 @@ async def one(
 	Returns:
 		Any: The value of the column `returning` in the newly inserted row, or None if no column was specified.
 	"""
-	keys, values, placeholders = util.prepare_kwargs(fields)
+	keys, values = util.prepare_kwargs(fields)
 	query = (
 		f"INSERT INTO {table} ({', '.join(keys)}) VALUES"
-		f" ({', '.join(placeholders)})"
+		f" ({', '.join(util.placeholders(len(fields)))})"
 		f" {'ON CONFLICT ' + on_conflict if on_conflict else ''}"
 		f" {('RETURNING ' + returning) if returning else ''}"
 	)
@@ -33,5 +33,16 @@ async def one(
 		return await conn.fetchval(query, *values)
 
 
-async def many(*args, **kwargs):
-	"TODO: continue here."
+T = TypeVar("T")
+
+
+async def many(
+	conn: asyncpg.Connection,
+	table: str,
+	columns: Iterable[str],
+	objects: Iterable[T],
+	extract_rows: Callable[[T], Tuple] = lambda obj: (obj,),
+	on_conflict: str = None,
+	returning: str = None,
+):
+	query = f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join()})"
