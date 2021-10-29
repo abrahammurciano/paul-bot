@@ -53,7 +53,7 @@ class Option:
 		return len(self.__votes)
 
 	async def add_vote(self, conn: asyncpg.Connection, voter_id: int):
-		await sql.insert(conn, "votes", option_id=self.option_id, voter_id=voter_id)
+		await sql.insert.one(conn, "votes", option_id=self.option_id, voter_id=voter_id)
 
 	@classmethod
 	async def get_voters(cls, conn: asyncpg.Connection, option_id: int) -> Set[int]:
@@ -85,7 +85,7 @@ class Option:
 		Returns:
 			Option: The new Option object.
 		"""
-		option_id = await sql.insert(
+		option_id = await sql.insert.one(
 			conn, "options", returning="id", label=label, poll_id=poll_id
 		)
 		return Option(option_id, label, ())

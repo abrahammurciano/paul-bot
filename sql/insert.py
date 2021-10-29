@@ -3,7 +3,7 @@ import asyncpg
 from . import util
 
 
-async def insert(
+async def one(
 	conn: asyncpg.Connection,
 	table: str,
 	on_conflict: str = None,
@@ -31,3 +31,7 @@ async def insert(
 	)
 	async with conn.transaction():
 		return await conn.fetchval(query, *values)
+
+
+async def many(*args, **kwargs):
+	"TODO: continue here."

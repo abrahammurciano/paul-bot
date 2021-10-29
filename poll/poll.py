@@ -1,5 +1,7 @@
 from typing import Iterable, Optional, Set, Tuple, Union, TYPE_CHECKING
 import asyncpg
+from mention import Mention
+from poll.command import PollCommandParams
 import sql
 import disnake
 from .option import Option
@@ -57,6 +59,11 @@ class Poll:
 		return self.__expires
 
 	@property
+	def is_active(self) -> bool:
+		"""True if the poll hasn't expired, False otherwise."""
+		return self.expires is None or self.expires > datetime.now()
+
+	@property
 	def vote_count(self) -> int:
 		"""Get the sum of the number of votes cast for each option."""
 		return sum(option.vote_count for option in self.options)
@@ -65,28 +72,30 @@ class Poll:
 	async def create_poll(
 		cls,
 		conn: asyncpg.Connection,
-		question: str,
-		option_labels: Iterable[str],
+		params: PollCommandParams,
 		message: disnake.Message,
 		author: Union[disnake.User, disnake.Member],
-		expires: Optional[datetime],
 	) -> "Poll":
 		assert message.guild is not None, "The poll's message must be in a guild."
-		poll_id = await sql.insert(
+		poll_id = await sql.insert.one(
 			conn,
 			"polls",
 			returning="id",
-			question=question,
+			question=params.question,
 			message=message.id,
 			channel=message.channel.id,
 			guild=message.guild.id,
 			author=author.id,
-			expires=expires,
+			expires=params.expires,
+			allow_multiple_votes=params.allow_multiple_votes,
 		)
+		__insert_permissions(conn, "allowed_vote_viewers", params.allowed_vote_viewers)
+		__insert_permissions(conn, "allowed_editors", params.allowed_editors)
+		__insert_permissions(conn, "allowed_voters", params.allowed_voters)
 		options = [
-			await Option.create_option(conn, label, poll_id) for label in option_labels
+			await Option.create_option(conn, label, poll_id) for label in params.options
 		]
-		return Poll(poll_id, question, options, message, author, expires)
+		return Poll(poll_id, params.question, options, message, author, params.expires)
 
 	@classmethod
 	async def get_active_polls(cls, bot: "Paul") -> Set["Poll"]:
@@ -145,3 +154,16 @@ async def __fetch_message(
 	):
 		raise ValueError("There is no text channel or thread with that ID.")
 	return await channel_or_thread.fetch_message(message_id)
+
+
+async def __insert_permissions(
+	conn: asyncpg.Connection, table: str, mentions: Iterable[Mention]
+):
+	await sql.insert.many(
+		conn,
+		table,
+		("mention_prefix", "mention_id"),
+		mentions,
+		extract_rows=lambda mention: (mention.prefix, mention.mentioned_id),
+		on_conflict="DO NOTHING",
+	)
