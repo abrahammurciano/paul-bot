@@ -12,7 +12,7 @@ class Option:
 		option_id: int,
 		label: str,
 		votes: Iterable[int],
-		author: Optional[int] = None,
+		author_id: Optional[int] = None,
 	):
 		"""Construct a Option object.
 
@@ -24,7 +24,7 @@ class Option:
 		"""
 		self.__option_id = option_id
 		self.__label = label
-		self.__author = author
+		self.__author_id = author_id
 		self.__votes = set(votes)
 
 	@property
@@ -38,9 +38,9 @@ class Option:
 		return self.__label
 
 	@property
-	def author(self) -> Optional[int]:
+	def author_id(self) -> Optional[int]:
 		"""The ID of the member who added the option, or None if the option existed from poll creation."""
-		return self.__author
+		return self.__author_id
 
 	@property
 	def votes(self) -> Set[int]:
@@ -73,22 +73,31 @@ class Option:
 		}
 
 	@classmethod
-	async def create_option(
-		cls, conn: asyncpg.Connection, label: str, poll_id: int
-	) -> "Option":
-		"""Create a new Option and add it to the database.
+	async def create_options(
+		cls,
+		conn: asyncpg.Connection,
+		labels: Iterable[str],
+		poll_id: int,
+		author_id: Optional[int] = None,
+	) -> List["Option"]:
+		"""Create new Option objects for the given poll and add them to the database.
 
 		Args:
-			label (str): The label of the option.
+			labels (str): The labels of the options to add.
 			poll_id (int): The id of the poll that this option belongs to.
+			author_id (Optional[int], optional): The ID of the person who added this option, or None if the options were created at the time of creation.
 
 		Returns:
-			Option: The new Option object.
+			List[Option]: The new Option objects.
 		"""
-		option_id = await sql.insert.one(
-			conn, "options", returning="id", label=label, poll_id=poll_id
+		records = await sql.insert.many(
+			conn,
+			"options",
+			("label", "poll_id", "author"),
+			[(label, poll_id, author_id) for label in labels],
+			returning="id, label",
 		)
-		return Option(option_id, label, ())
+		return [Option(r["id"], r["label"], (), author_id) for r in records]
 
 	@classmethod
 	async def get_options_of_poll(

@@ -14,8 +14,11 @@ from paul import Paul
 from poll.command import PollCommandParams, poll_command
 from poll.converters import Mention, parse_expires, parse_mentions, parse_options
 import logging
+import tracemalloc
+
 
 logging.basicConfig(level=logging.INFO)
+tracemalloc.start()
 
 
 async def main():

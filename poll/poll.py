@@ -1,7 +1,7 @@
 from typing import Iterable, Optional, Set, Tuple, Union, TYPE_CHECKING
 import asyncpg
 from mention import Mention
-from poll.command import PollCommandParams
+from poll.command_params import PollCommandParams
 import sql
 import disnake
 from .option import Option
@@ -77,24 +77,30 @@ class Poll:
 		author: Union[disnake.User, disnake.Member],
 	) -> "Poll":
 		assert message.guild is not None, "The poll's message must be in a guild."
-		poll_id = await sql.insert.one(
-			conn,
-			"polls",
-			returning="id",
-			question=params.question,
-			message=message.id,
-			channel=message.channel.id,
-			guild=message.guild.id,
-			author=author.id,
-			expires=params.expires,
-			allow_multiple_votes=params.allow_multiple_votes,
+		poll_id = (
+			await sql.insert.one(
+				conn,
+				"polls",
+				returning="id",
+				question=params.question,
+				message=message.id,
+				channel=message.channel.id,
+				guild=message.guild.id,
+				author=author.id,
+				expires=params.expires,
+				allow_multiple_votes=params.allow_multiple_votes,
+			)
+		)["id"]
+		await cls.__insert_permissions(
+			conn, "allowed_vote_viewers", params.allowed_vote_viewers, poll_id
 		)
-		__insert_permissions(conn, "allowed_vote_viewers", params.allowed_vote_viewers)
-		__insert_permissions(conn, "allowed_editors", params.allowed_editors)
-		__insert_permissions(conn, "allowed_voters", params.allowed_voters)
-		options = [
-			await Option.create_option(conn, label, poll_id) for label in params.options
-		]
+		await cls.__insert_permissions(
+			conn, "allowed_editors", params.allowed_editors, poll_id
+		)
+		await cls.__insert_permissions(
+			conn, "allowed_voters", params.allowed_voters, poll_id
+		)
+		options = await Option.create_options(conn, params.options, poll_id)
 		return Poll(poll_id, params.question, options, message, author, params.expires)
 
 	@classmethod
@@ -111,7 +117,7 @@ class Poll:
 		)
 		polls = set()
 		for r in records:
-			if message := await __fetch_message(
+			if message := await cls.__fetch_message(
 				bot, r["message"], r["channel"], r["guild"]
 			):
 				polls.add(
@@ -126,44 +132,46 @@ class Poll:
 				)
 		return polls
 
+	@staticmethod
+	async def __fetch_message(
+		client: disnake.Client,
+		message_id: int,
+		channel_or_thread_id: int,
+		guild_id: int,
+	) -> Optional[disnake.Message]:
+		"""Fetch a message given its ID and the ID of the channel or thread that it's in.
 
-async def __fetch_message(
-	client: disnake.Client, message_id: int, channel_or_thread_id: int, guild_id: int
-) -> Optional[disnake.Message]:
-	"""Fetch a message given its ID and the ID of the channel or thread that it's in.
+		Args:
+			client (disnake.Client): Client who will fetch the message.
+			message_id (int): The ID of the message to fetch.
+			channel_or_thread_id (int): The ID of the channel or thread that the message is in.
+			guild_id (int): The ID of the guild that the message is in.
 
-	Args:
-		client (disnake.Client): Client who will fetch the message.
-		message_id (int): The ID of the message to fetch.
-		channel_or_thread_id (int): The ID of the channel or thread that the message is in.
-		guild_id (int): The ID of the guild that the message is in.
+		Returns:
+			Optional[disnake.Message]: The message object, or None if it was not found in the given channel.
 
-	Returns:
-		Optional[disnake.Message]: The message object, or None if it was not found in the given channel.
+		Raises:
+			ValueError: If the given channel or thread id is not found in the guild.
+			disnake.NotFound: If the message was not found in the given channel or thread.
+		"""
+		guild = client.get_guild(guild_id)
+		if guild is None:
+			raise ValueError("Could not find a guile with the given ID.")
+		channel_or_thread = guild.get_channel_or_thread(channel_or_thread_id)
+		if not isinstance(channel_or_thread, disnake.TextChannel) or isinstance(
+			channel_or_thread, disnake.Thread
+		):
+			raise ValueError("There is no text channel or thread with that ID.")
+		return await channel_or_thread.fetch_message(message_id)
 
-	Raises:
-		ValueError: If the given channel or thread id is not found in the guild.
-		disnake.NotFound: If the message was not found in the given channel or thread.
-	"""
-	guild = client.get_guild(guild_id)
-	if guild is None:
-		raise ValueError("Could not find a guile with the given ID.")
-	channel_or_thread = guild.get_channel_or_thread(channel_or_thread_id)
-	if not isinstance(channel_or_thread, disnake.TextChannel) or isinstance(
-		channel_or_thread, disnake.Thread
+	@staticmethod
+	async def __insert_permissions(
+		conn: asyncpg.Connection, table: str, mentions: Iterable[Mention], poll_id: int
 	):
-		raise ValueError("There is no text channel or thread with that ID.")
-	return await channel_or_thread.fetch_message(message_id)
-
-
-async def __insert_permissions(
-	conn: asyncpg.Connection, table: str, mentions: Iterable[Mention]
-):
-	await sql.insert.many(
-		conn,
-		table,
-		("mention_prefix", "mention_id"),
-		mentions,
-		extract_rows=lambda mention: (mention.prefix, mention.mentioned_id),
-		on_conflict="DO NOTHING",
-	)
+		await sql.insert.many(
+			conn,
+			table,
+			("poll_id", "mention_prefix", "mention_id"),
+			[(poll_id, mention.prefix, mention.mentioned_id) for mention in mentions],
+			on_conflict="DO NOTHING",
+		)

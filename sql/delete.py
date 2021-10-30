@@ -13,7 +13,7 @@ async def delete(conn: asyncpg.Connection, table: str, **conditions):
 		table (str): The name of the table to delete rows from.
 		**conditions:  Keyword arguments specifying constraints on the select statement. For a kwarg A=B, the select statement will only match rows where the column named A has the value B.
 	"""
-	columns, values, placeholders = util.prepare_kwargs(conditions)
-	query = f"DELETE FROM {table}{util.where(columns, placeholders)}"
+	columns, values = util.prepare_kwargs(conditions)
+	query = f"DELETE FROM {table}{util.where(columns)}"
 	async with conn.transaction():
 		await conn.execute(query, *values)

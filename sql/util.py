@@ -1,4 +1,5 @@
-from typing import Any, Dict, Generator, List, Sequence, Tuple
+from typing import Any, Dict, Generator, Optional, Sequence, Tuple
+from itertools import count
 
 
 def where(columns: Sequence[str]) -> str:
@@ -32,13 +33,13 @@ def prepare_kwargs(kwargs: Dict[str, Any]) -> Tuple[Tuple[str, ...], Tuple[Any, 
 	return keys, values
 
 
-def placeholders(n: int) -> Generator[str, None, None]:
+def placeholders(n: Optional[int] = None) -> Generator[str, None, None]:
 	"""Get n placeholders for asyncpg. E.g. $1, $2, etc.
 
 	Args:
-		n (int): The number of placeholders to get.
+		n (Optional[int], optional): The number of placeholders to get. Default is unlimited.
 
 	Returns:
 		Generator[str]: The placeholders.
 	"""
-	return (f"${i + 1}" for i in range(n))
+	return (f"${i + 1}" for i in (range(n) if n is not None else count()))

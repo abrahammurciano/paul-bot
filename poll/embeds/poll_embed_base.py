@@ -7,5 +7,5 @@ class PollEmbedBase(disnake.Embed):
 
 	def __init__(self, question: str, description: Optional[str] = None):
 		super().__init__(
-			title=f"📊 {question}", colour=0x6F85D5, description=description
+			title=f"📊 {question}", colour=0x6F85D5, description=description or "",
 		)

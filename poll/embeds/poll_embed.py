@@ -4,7 +4,7 @@ import disnake
 from itertools import count
 from mention import Mention
 from poll import Poll
-from poll.embeds import PollEmbedBase
+from .poll_embed_base import PollEmbedBase
 
 
 class PollEmbed(PollEmbedBase):
@@ -51,7 +51,7 @@ class PollEmbed(PollEmbedBase):
 		"""A list of lines which will be shown at the bottom of the embed."""
 		return (
 			self.closing_text(self.poll.expires),
-			self.vote_viewers_text(self.poll.allowed_vote_viewers),
+			# self.vote_viewers_text(self.poll.allowed_vote_viewers),
 		)
 
 	@property
