@@ -22,7 +22,10 @@ class VoteButton(disnake.ui.Button):
 		self.conn = conn
 		super().__init__(
 			style=ButtonStyle.blurple,
-			label=str(index + 1),
+			label=(
+				f"{str(index + 1)}."
+				f" {self.option.label[:30]}{'...' if len(self.option.label) > 30 else ''}"
+			),
 			custom_id=str(self.option.option_id),
 		)
 

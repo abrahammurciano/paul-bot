@@ -15,7 +15,7 @@ class PollEmbed(PollEmbedBase):
 		poll: Poll,
 		*,
 		vote_bar_background: str = "⬛",
-		vote_bar_foregrounds: Tuple[str, ...] = ("🟨", "🟩", "🟥", "🟦", "🟪", "🟧"),
+		vote_bar_foregrounds: Tuple[str, ...] = ("🟥", "🟦", "🟨", "🟩", "🟪", "🟧"),
 		vote_bar_length: int = 12,
 	):
 		"""Construct an Embed for the poll.
@@ -55,14 +55,14 @@ class PollEmbed(PollEmbedBase):
 			self.voters_text(self.poll.allowed_voters),
 		)
 
-	@property
 	def option_prefixes(self) -> Generator[str, None, None]:
 		return (f"{i}." for i in count(start=1))
 
 	def add_options(self):
+		prefixes = self.option_prefixes()
 		for i, option in enumerate(self.poll.options):
 			self.add_field(
-				name=f"{next(self.option_prefixes)} {option.label}",
+				name=f"{next(prefixes)} {option.label}",
 				value=self.vote_bar(i, option.vote_count, self.poll.vote_count),
 				inline=False,
 			)
