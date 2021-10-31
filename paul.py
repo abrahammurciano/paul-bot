@@ -2,6 +2,7 @@ from typing import Set
 from disnake.ext.commands.bot import Bot
 import asyncpg
 from poll import Poll
+from poll.ui.poll_view import PollView
 
 
 class Paul(Bot):
@@ -12,7 +13,9 @@ class Paul(Bot):
 
 	async def load_polls(self):
 		"""Fetch the polls from the database."""
-		self.__polls = await Poll.get_active_polls()
+		self.__polls = await Poll.get_active_polls(self.conn)
+		for poll in self.__polls:
+			self.add_view(PollView(poll, self.conn))
 
 	@property
 	def polls(self) -> Set[Poll]:
