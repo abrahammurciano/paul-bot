@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Generator, Optional
+from typing import Generator, Iterable, Optional
 
 import disnake
+from mention import Mention, mentions_str
 from poll.embeds.poll_embed import PollEmbed
 from poll import Poll
 
@@ -25,3 +26,6 @@ class PollClosedEmbed(PollEmbed):
 		), "Attempting to create an expired embed for a poll that doesn't expire"
 		timestamp = disnake.utils.format_dt(expires, style="R")
 		return f"⌛Poll closed {timestamp}."
+
+	def voters_text(self, voters: Iterable[Mention]) -> str:
+		return f"🗳️ {mentions_str(voters)} were allowed to vote."

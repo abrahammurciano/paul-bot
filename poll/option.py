@@ -54,6 +54,7 @@ class Option:
 
 	async def add_vote(self, conn: asyncpg.Connection, voter_id: int):
 		await sql.insert.one(conn, "votes", option_id=self.option_id, voter_id=voter_id)
+		self.__votes.add(voter_id)
 
 	@classmethod
 	async def get_voters(cls, conn: asyncpg.Connection, option_id: int) -> Set[int]:

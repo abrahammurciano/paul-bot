@@ -1,18 +1,20 @@
 import asyncio
 from datetime import datetime
 import os
-from typing import Iterable, List, Literal, Optional, Union
+from typing import Iterable, List, Optional
 import asyncpg
 import disnake
-from disnake.ext.commands.params import Param, option_enum
+from disnake.ext.commands.params import Param
 from disnake.enums import ActivityType
 from disnake.interactions.application_command import GuildCommandInteraction
 from disnake.interactions.base import Interaction
-from disnake import Member, Role
-from friendly_error import FriendlyError
+from errors import FriendlyError, handle_error
 from paul import Paul
-from poll.command import PollCommandParams, poll_command
+from poll import Poll
+from poll.command_params import PollCommandParams
 from poll.converters import Mention, parse_expires, parse_mentions, parse_options
+from poll.embeds import PollEmbedBase, PollEmbed
+from poll.ui import VoteView
 import logging
 import tracemalloc
 
@@ -23,7 +25,9 @@ tracemalloc.start()
 
 async def main():
 	# Connect to the database
-	conn = await asyncpg.connect(os.getenv("DATABASE_URL", ""), ssl="require")
+	conn: asyncpg.Connection = await asyncpg.connect(
+		os.getenv("DATABASE_URL", ""), ssl="require"
+	)
 
 	activity = disnake.Activity(name="/poll", type=ActivityType.listening)
 
@@ -32,7 +36,7 @@ async def main():
 
 	@bot.event
 	async def on_ready():
-		print(f"{bot.user.name} has connected to Discord!")
+		print(f"\n{bot.user.name} has connected to Discord!\n")
 
 	@bot.slash_command(desc="Create a poll", guild_ids=[805193644571099187])
 	async def poll(
@@ -73,9 +77,14 @@ async def main():
 			converter=parse_mentions,
 		),
 	):
-		await poll_command(
-			bot,
-			inter,
+		await inter.response.send_message(
+			embed=PollEmbedBase(
+				question, "<:loading:904120454975991828> Loading poll..."
+			)
+		)
+		message = await inter.original_message()
+		poll = await Poll.create_poll(
+			bot.conn,
 			PollCommandParams(
 				question,
 				options,
@@ -85,16 +94,14 @@ async def main():
 				allowed_editors,
 				allowed_voters,
 			),
+			message,
+			inter.author,
 		)
+		await message.edit(embed=PollEmbed(poll), view=VoteView(poll, conn))
 
 	@bot.event
 	async def on_slash_command_error(inter: Interaction, error: Exception):
-		if (original := getattr(error, "original", None)) and isinstance(
-			original, FriendlyError
-		):
-			await original.send()
-		else:
-			logging.error(error)
+		await handle_error(error)
 
 	# Run Discord bot
 	await bot.start(os.getenv("BOT_TOKEN", ""))

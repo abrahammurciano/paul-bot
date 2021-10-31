@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Generator, Iterable, Optional, Tuple
 import disnake
 from itertools import count
-from mention import Mention
+from mention import Mention, mentions_str
 from poll import Poll
 from .poll_embed_base import PollEmbedBase
 
@@ -51,7 +51,8 @@ class PollEmbed(PollEmbedBase):
 		"""A list of lines which will be shown at the bottom of the embed."""
 		return (
 			self.closing_text(self.poll.expires),
-			# self.vote_viewers_text(self.poll.allowed_vote_viewers),
+			self.vote_viewers_text(self.poll.allowed_vote_viewers),
+			self.voters_text(self.poll.allowed_voters),
 		)
 
 	@property
@@ -107,14 +108,16 @@ class PollEmbed(PollEmbedBase):
 			str: A string describing when the poll will expire.
 		"""
 		if expires is None:
-			return "♾️This poll will never expire."
+			return "♾️ This poll will never expire."
 		timestamp = disnake.utils.format_dt(expires, style="R")
 		return f"⏳Poll closes {timestamp}."
 
 	def vote_viewers_text(self, viewers: Iterable[Mention]) -> str:
 		return (
-			"Your vote can be seen by"
-			f" {', '.join(str(mention) for mention in viewers)}."
+			f"📣 Your vote can be seen by {mentions_str(viewers)}."
 			if viewers
-			else "No one can see your vote."
+			else "🔓 No one can see your vote."
 		)
+
+	def voters_text(self, voters: Iterable[Mention]) -> str:
+		return f"🗳️ {mentions_str(voters)} may vote."

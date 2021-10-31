@@ -1,6 +1,6 @@
 from typing import Callable, List
 from disnake.interactions.base import Interaction
-from friendly_error import FriendlyError
+from errors import FriendlyError
 from datetime import datetime
 import dateparser
 import re
@@ -32,4 +32,4 @@ MENTION_REGEX = re.compile(r"<(@[!&])?(\d+)>")
 
 
 def parse_mentions(inter: Interaction, string: str) -> List[Mention]:
-	return [Mention(*tup) for tup in MENTION_REGEX.findall(string)]
+	return [Mention(tup[0], int(tup[1])) for tup in MENTION_REGEX.findall(string)]

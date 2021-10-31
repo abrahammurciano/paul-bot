@@ -1,5 +1,6 @@
-from typing import Iterable, Optional, Set, Tuple, Union, TYPE_CHECKING
+from typing import Iterable, List, Literal, Optional, Set, Tuple, Union, TYPE_CHECKING
 import asyncpg
+from disnake.utils import deprecated
 from mention import Mention
 from poll.command_params import PollCommandParams
 import sql
@@ -20,6 +21,10 @@ class Poll:
 		message: disnake.Message,
 		author: Optional[Union[disnake.User, disnake.Member]],
 		expires: Optional[datetime],
+		allow_multiple_votes: bool,
+		allowed_vote_viewers: Iterable[Mention],
+		allowed_editors: Iterable[Mention],
+		allowed_voters: Iterable[Mention],
 	):
 		self.__poll_id = poll_id
 		self.__question = question
@@ -27,6 +32,10 @@ class Poll:
 		self.__message = message
 		self.__author = author
 		self.__expires = expires
+		self.__allow_multiple_votes = allow_multiple_votes
+		self.__allowed_vote_viewers = tuple(allowed_vote_viewers)
+		self.__allowed_editors = tuple(allowed_editors)
+		self.__allowed_voters = tuple(allowed_voters)
 
 	@property
 	def poll_id(self) -> int:
@@ -68,6 +77,26 @@ class Poll:
 		"""Get the sum of the number of votes cast for each option."""
 		return sum(option.vote_count for option in self.options)
 
+	@property
+	def allow_multiple_votes(self) -> bool:
+		"""Whether or not the poll allowes a user to vote on multiple options."""
+		return self.__allow_multiple_votes
+
+	@property
+	def allowed_vote_viewers(self) -> Tuple[Mention, ...]:
+		"""The mentions of the users or roles who are allowed to view people's votes."""
+		return self.__allowed_vote_viewers
+
+	@property
+	def allowed_editors(self) -> Tuple[Mention, ...]:
+		"""The mentions of the users or roles who are allowed to add options to the poll."""
+		return self.__allowed_editors
+
+	@property
+	def allowed_voters(self) -> Tuple[Mention, ...]:
+		"""The mentions of the users or roles who are allowed to vote on the poll."""
+		return self.__allowed_voters
+
 	@classmethod
 	async def create_poll(
 		cls,
@@ -101,7 +130,18 @@ class Poll:
 			conn, "allowed_voters", params.allowed_voters, poll_id
 		)
 		options = await Option.create_options(conn, params.options, poll_id)
-		return Poll(poll_id, params.question, options, message, author, params.expires)
+		return Poll(
+			poll_id,
+			params.question,
+			options,
+			message,
+			author,
+			params.expires,
+			params.allow_multiple_votes,
+			params.allowed_vote_viewers,
+			params.allowed_editors,
+			params.allowed_voters,
+		)
 
 	@classmethod
 	async def get_active_polls(cls, bot: "Paul") -> Set["Poll"]:
@@ -113,7 +153,15 @@ class Poll:
 		records = await sql.select.many(
 			bot.conn,
 			"active_polls_view",
-			("id", "question", "message", "channel", "guild", "expires"),
+			(
+				"id",
+				"question",
+				"message",
+				"channel",
+				"guild",
+				"expires",
+				"allow_multiple_votes",
+			),
 		)
 		polls = set()
 		for r in records:
@@ -128,6 +176,16 @@ class Poll:
 						message,
 						await bot.get_guild(r["guild"]).get_member(r["author"]),
 						r["expires"],
+						r["allow_multiple_votes"],
+						await cls.__get_permissions(
+							bot.conn, "allowed_vote_viewers", r["id"]
+						),
+						await cls.__get_permissions(
+							bot.conn, "allowed_editors", r["id"]
+						),
+						await cls.__get_permissions(
+							bot.conn, "allowed_voters", r["id"]
+						),
 					)
 				)
 		return polls
@@ -175,3 +233,16 @@ class Poll:
 			[(poll_id, mention.prefix, mention.mentioned_id) for mention in mentions],
 			on_conflict="DO NOTHING",
 		)
+
+	@staticmethod
+	async def __get_permissions(
+		conn: asyncpg.Connection,
+		table: Literal["allowed_vote_viewers", "allowed_editors", "allowed_voters"],
+		poll_id: int,
+	) -> List[Mention]:
+		return [
+			Mention(r["mention_prefix"], r["mention_id"])
+			for r in await sql.select.many(
+				conn, table, ("mention_prefix", "mention_id"), poll_id=poll_id
+			)
+		]
