@@ -44,7 +44,7 @@ async def main():
 			await bot.load_polls()
 			bot_ready_triggered = True
 
-	@bot.slash_command(desc="Create a poll", guild_ids=[805193644571099187])
+	@bot.slash_command(desc="Create a poll")
 	async def poll(
 		inter: GuildCommandInteraction,
 		question: str = Param(desc="Ask a question..."),
