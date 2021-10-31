@@ -31,7 +31,7 @@ class VoteButton(disnake.ui.Button):
 			mention.includes_member(interaction.author)
 			for mention in self.poll.allowed_voters
 		):
-			await self.option.add_vote(self.conn, interaction.author.id)
+			await self.option.toggle_vote(self.conn, interaction.author.id)
 			await interaction.response.edit_message(embed=PollEmbed(self.poll))
 		else:
 			raise FriendlyError(
