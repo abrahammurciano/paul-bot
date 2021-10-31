@@ -52,9 +52,21 @@ class Option:
 		"""Get the number of votes for this option."""
 		return len(self.__votes)
 
-	async def add_vote(self, conn: asyncpg.Connection, voter_id: int):
-		await sql.insert.one(conn, "votes", option_id=self.option_id, voter_id=voter_id)
-		self.__votes.add(voter_id)
+	async def toggle_vote(self, conn: asyncpg.Connection, voter_id: int):
+		"""Toggle a user's vote on this option.
+
+		Args:
+			conn (asyncpg.Connection): The database connection.
+			voter_id (int): The ID of the user to toggle the vote of.
+		"""
+		if voter_id in self.votes:
+			await sql.delete(conn, "votes", option_id=self.option_id, voter_id=voter_id)
+			self.__votes.remove(voter_id)
+		else:
+			await sql.insert.one(
+				conn, "votes", option_id=self.option_id, voter_id=voter_id
+			)
+			self.__votes.add(voter_id)
 
 	@classmethod
 	async def get_voters(cls, conn: asyncpg.Connection, option_id: int) -> Set[int]:
