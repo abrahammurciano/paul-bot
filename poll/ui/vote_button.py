@@ -17,10 +17,14 @@ class VoteButton(disnake.ui.Button):
 			index (int): The index (starting from 0) of the option this button is for.
 			conn (asyncpg.Connection): The database connection to register the vote with.
 		"""
-		super().__init__(style=ButtonStyle.blurple, label=str(index + 1))
 		self.poll = poll
 		self.option = poll.options[index]
 		self.conn = conn
+		super().__init__(
+			style=ButtonStyle.blurple,
+			label=str(index + 1),
+			custom_id=str(self.option.option_id),
+		)
 
 	async def callback(self, interaction: MessageInteraction):
 		if any(

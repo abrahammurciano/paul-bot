@@ -14,13 +14,15 @@ from poll import Poll
 from poll.command_params import PollCommandParams
 from poll.converters import Mention, parse_expires, parse_mentions, parse_options
 from poll.embeds import PollEmbedBase, PollEmbed
-from poll.ui import VoteView
+from poll.ui import PollView
 import logging
 import tracemalloc
 
 
 logging.basicConfig(level=logging.INFO)
 tracemalloc.start()
+
+bot_ready_triggered = False
 
 
 async def main():
@@ -36,7 +38,11 @@ async def main():
 
 	@bot.event
 	async def on_ready():
-		print(f"\n{bot.user.name} has connected to Discord!\n")
+		global bot_ready_triggered
+		if not bot_ready_triggered:
+			print(f"\n{bot.user.name} has connected to Discord!\n")
+			await bot.load_polls()
+			bot_ready_triggered = True
 
 	@bot.slash_command(desc="Create a poll", guild_ids=[805193644571099187])
 	async def poll(
@@ -94,10 +100,9 @@ async def main():
 				allowed_editors,
 				allowed_voters,
 			),
-			message,
-			inter.author,
+			inter.author.id,
 		)
-		await message.edit(embed=PollEmbed(poll), view=VoteView(poll, conn))
+		await message.edit(embed=PollEmbed(poll), view=PollView(poll, conn))
 
 	@bot.event
 	async def on_slash_command_error(inter: Interaction, error: Exception):

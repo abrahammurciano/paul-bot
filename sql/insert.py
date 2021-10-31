@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional, Sequence, overload
+from typing import Any, Iterable, List, Optional, Sequence, Tuple, Union, overload
 import asyncpg
 from . import util
 from itertools import chain
@@ -12,7 +12,19 @@ async def one(
 	on_conflict: Optional[str] = None,
 	returning: str,
 	**fields,
-) -> asyncpg.Record:
+) -> Any:
+	...
+
+
+@overload
+async def one(
+	conn: asyncpg.Connection,
+	table: str,
+	*,
+	on_conflict: Optional[str] = None,
+	returning: Iterable[str],
+	**fields,
+) -> Tuple:
 	...
 
 
@@ -33,9 +45,9 @@ async def one(
 	table: str,
 	*,
 	on_conflict: Optional[str] = None,
-	returning: Optional[str] = None,
+	returning: Optional[Union[str, Iterable[str]]] = None,
 	**fields,
-) -> Optional[asyncpg.Record]:
+) -> Optional[Any]:
 	"""Run an insert statement on the given table.
 
 	For security reasons it is important that the only user input passed into this function is via the values of `**fields`.
@@ -44,20 +56,17 @@ async def one(
 		conn (asyncpg.Connection): The connection to send the query to.
 		table (str): The name of the table to insert into.
 		on_conflict (Optional[str], optional): The on_conflict clause to add to the query. For example can be "DO NOTHING" to suppress errors if the record already exists.
-		returning (Optional[str], optional): The returning clause to add to the query. This can be a single column name, several column names, or any other valid SQL expression. Commonly this would be the name of the serial primary key column but doesn't have to be. By default the function returns None.
+		returning (Optional[Union[str], Iterable[str]], optional): Either a column name to return just that value, or an iterable of column names to return a tuple of those values, or None to return None. Typically this would be the name of the serial primary key column but doesn't have to be. By default the function returns None.
 		fields: The values to insert into the given table.
 
 	Returns:
-		Optional[asyncpg.Record]: A record containing whatever was specified in the `returning` parameter, or None if nothing was specified.
+		Optional[Any]: If according to the `returning` clause, the insert statement returns a single value, this function returns said value. If the insert statement returns a row of values, this function returns a tuple of the values. If the insert statement returns nothing, this function returns None.
 	"""
 	keys, values = util.prepare_kwargs(fields)
-	result = await many(
+	results = await many(
 		conn, table, keys, (values,), on_conflict=on_conflict, returning=returning
 	)
-	if result is None:
-		return None
-	else:
-		return result[0]
+	return results[0] if returning is not None else None
 
 
 @overload
@@ -69,7 +78,20 @@ async def many(
 	*,
 	on_conflict: Optional[str] = None,
 	returning: str,
-) -> asyncpg.Record:
+) -> List[Any]:
+	...
+
+
+@overload
+async def many(
+	conn: asyncpg.Connection,
+	table: str,
+	columns: Iterable[str],
+	records: Sequence[Sequence],
+	*,
+	on_conflict: Optional[str] = None,
+	returning: Iterable[str],
+) -> List[asyncpg.Record]:
 	...
 
 
@@ -93,8 +115,8 @@ async def many(
 	records: Sequence[Sequence],
 	*,
 	on_conflict: Optional[str] = None,
-	returning: Optional[str] = None,
-) -> Optional[List[asyncpg.Record]]:
+	returning: Optional[Union[str, Iterable[str]]] = None,
+) -> Optional[Union[List[asyncpg.Record], List[Any]]]:
 	"""Insert many rows into a database.
 
 	Args:
@@ -103,10 +125,10 @@ async def many(
 		columns (Iterable[str]): The column names for which to insert values. The order of the columns must match the order of the values in the parameter `records`.
 		records (Sequence[Sequence]): An sequence containing the rows to insert. Each row must be a sequence of values in the order specified in the `columns` parameter.
 		on_conflict (Optional[str], optional): The on_conflict clause to add to the query. For example can be "DO NOTHING" to suppress errors if the record already exists.
-		returning (Optional[str], optional): The returning clause to add to the query. This can be a single column name, several column names, or any other valid SQL expression. Commonly this would be the name of the serial primary key column but doesn't have to be. By default the function returns None.
+		returning (Optional[Union[str], Iterable[str]], optional): Either a column name to return a list with just that value for each inserted record, or an iterable of column names to return a tuple of those values, or None to return None. Typically this would be the name of the serial primary key column but doesn't have to be. By default the function returns None.
 
 	Returns:
-		Optional[List[asyncpg.Record]]: A list of records containing whatever was specified in the `returning` parameter, or None if nothing was specified.
+		Optional[Union[List[asyncpg.Record], List[Any]]]: If according to the returning clause multiple columns are returned by the database, then this function returns a list of said records. If the database returns one column, then a list of said items is returned. If the insert statement returns no records, then None is returned.
 	"""
 	placeholders = util.placeholders()
 	values = ", ".join(
@@ -120,12 +142,18 @@ async def many(
 		returning,
 	)
 	async with conn.transaction():
-		result = await conn.fetch(query, *chain(*records))
-		return result if returning is not None else None
+		results = await conn.fetch(query, *chain(*records))
+		if returning is None:
+			return None
+		if results and len(results[0]) > 1:
+			return results
+		return [result[0] for result in results]
 
 
 def __with_conflict_returning(
-	query: str, on_conflict: Optional[str], returning: Optional[str]
+	query: str,
+	on_conflict: Optional[str],
+	returning: Optional[Union[str, Iterable[str]]],
 ) -> str:
 	"""Return a query with an ON CONFLICT clause and a RETURNING clause if specified.
 
@@ -140,5 +168,8 @@ def __with_conflict_returning(
 	if on_conflict:
 		query += f" ON CONFLICT {on_conflict}"
 	if returning:
-		query += f" RETURNING {returning}"
+		query += (
+			" RETURNING"
+			f" {returning if isinstance(returning, str) else ' (' + ', '.join(returning) + ')'}"
+		)
 	return query
