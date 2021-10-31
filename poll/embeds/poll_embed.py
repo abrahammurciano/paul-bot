@@ -15,7 +15,7 @@ class PollEmbed(PollEmbedBase):
 		poll: Poll,
 		*,
 		vote_bar_background: str = "⬛",
-		vote_bar_foregrounds: Tuple[str, ...] = ("🟥", "🟦", "🟨", "🟩", "🟪", "🟧"),
+		vote_bar_foregrounds: Tuple[str, ...] = ("🟦", "🟥", "🟨", "🟩", "🟪", "🟧"),
 		vote_bar_length: int = 12,
 	):
 		"""Construct an Embed for the poll.

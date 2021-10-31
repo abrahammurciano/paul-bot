@@ -13,7 +13,6 @@ class Poll:
 		self,
 		poll_id: int,
 		question: str,
-		options: Iterable[Option],
 		expires: Optional[datetime],
 		author_id: int,
 		allow_multiple_votes: bool,
@@ -23,13 +22,13 @@ class Poll:
 	):
 		self.__poll_id = poll_id
 		self.__question = question
-		self.__options = tuple(options)
 		self.__expires = expires
 		self.__author_id = author_id
 		self.__allow_multiple_votes = allow_multiple_votes
 		self.__allowed_vote_viewers = tuple(allowed_vote_viewers)
 		self.__allowed_editors = tuple(allowed_editors)
 		self.__allowed_voters = tuple(allowed_voters)
+		self.__options: Tuple
 
 	@property
 	def poll_id(self) -> int:
@@ -108,11 +107,9 @@ class Poll:
 		await cls.__insert_permissions(
 			conn, "allowed_voters", params.allowed_voters, poll_id
 		)
-		options = await Option.create_options(conn, params.options, poll_id)
-		return Poll(
+		poll = cls(
 			poll_id,
 			params.question,
-			options,
 			params.expires,
 			author_id,
 			params.allow_multiple_votes,
@@ -120,6 +117,8 @@ class Poll:
 			params.allowed_editors,
 			params.allowed_voters,
 		)
+		poll.__options = await Option.create_options(conn, params.options, poll)
+		return poll
 
 	@classmethod
 	async def get_active_polls(cls, conn: asyncpg.Connection) -> Set["Poll"]:
@@ -136,11 +135,11 @@ class Poll:
 			"active_polls_view",
 			("id", "question", "expires", "author", "allow_multiple_votes",),
 		)
-		return {
-			cls(
+		polls = set()
+		for r in records:
+			poll = cls(
 				r["id"],
 				r["question"],
-				await Option.get_options_of_poll(conn, r["id"]),
 				r["expires"],
 				r["author"],
 				r["allow_multiple_votes"],
@@ -148,8 +147,19 @@ class Poll:
 				await cls.__get_permissions(conn, "allowed_editors", r["id"]),
 				await cls.__get_permissions(conn, "allowed_voters", r["id"]),
 			)
-			for r in records
-		}
+			poll.__options = tuple(await Option.get_options_of_poll(conn, poll))
+			polls.add(poll)
+		return polls
+
+	async def remove_votes_from(self, conn: asyncpg.Connection, voter_id: int):
+		"""Remove all votes from the given user on this poll.
+
+		Args:
+			conn (asyncpg.Connection): A connection to the database.
+			voter_id (int): The ID of the user whose votes should be removed.
+		"""
+		for option in self.options:
+			await option.remove_vote(conn, voter_id)
 
 	@staticmethod
 	async def __insert_permissions(
