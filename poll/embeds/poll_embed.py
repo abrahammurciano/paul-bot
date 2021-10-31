@@ -11,23 +11,18 @@ class PollEmbed(PollEmbedBase):
 	"""Base class for poll embeds."""
 
 	def __init__(
-		self,
-		poll: Poll,
-		*,
-		vote_bar_background: str = "⬛",
-		vote_bar_foregrounds: Tuple[str, ...] = ("🟦", "🟥", "🟨", "🟩", "🟪", "🟧"),
-		vote_bar_length: int = 12,
+		self, poll: Poll,
 	):
 		"""Construct an Embed for the poll.
 
 		Args:
-			question (str): The question of the poll.
+			poll (Poll): The poll to create an embed for.
 		"""
 		super().__init__(poll.question)
 		self.poll = poll
-		self.__vote_bar_background = vote_bar_background
-		self.__vote_bar_foregrounds = vote_bar_foregrounds
-		self.__vote_bar_length = vote_bar_length
+		self.__vote_bar_background = "⬛"
+		self.__vote_bar_foregrounds = ("🟦", "🟥", "🟨", "🟩", "🟪", "🟧")
+		self.__vote_bar_length = 12
 		self.add_options()
 		self.add_details()
 
@@ -63,7 +58,9 @@ class PollEmbed(PollEmbedBase):
 		for i, option in enumerate(self.poll.options):
 			self.add_field(
 				name=f"{next(prefixes)} {option.label}",
-				value=self.vote_bar(i, option.vote_count, self.poll.vote_count),
+				value=self.vote_bar(
+					i, option.vote_count, self.poll.vote_count, option.author_id
+				),
 				inline=False,
 			)
 

@@ -2,7 +2,7 @@ import asyncpg
 from . import util
 
 
-async def delete(conn: asyncpg.Connection, table: str, **conditions):
+async def delete(pool: asyncpg.Pool, table: str, **conditions):
 	"""Delete the rows that satisfy the given conditions from the given table.
 
 	Note, if no kwargs are passed to `conditions`, all rows will be deleted.
@@ -15,5 +15,6 @@ async def delete(conn: asyncpg.Connection, table: str, **conditions):
 	"""
 	columns, values = util.prepare_kwargs(conditions)
 	query = f"DELETE FROM {table}{util.where(columns)}"
-	async with conn.transaction():
-		await conn.execute(query, *values)
+	async with pool.acquire() as conn:
+		async with conn.transaction():
+			await conn.execute(query, *values)

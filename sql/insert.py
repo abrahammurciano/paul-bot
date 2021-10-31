@@ -6,7 +6,7 @@ from itertools import chain
 
 @overload
 async def one(
-	conn: asyncpg.Connection,
+	pool: asyncpg.Pool,
 	table: str,
 	*,
 	on_conflict: Optional[str] = None,
@@ -18,7 +18,7 @@ async def one(
 
 @overload
 async def one(
-	conn: asyncpg.Connection,
+	pool: asyncpg.Pool,
 	table: str,
 	*,
 	on_conflict: Optional[str] = None,
@@ -30,7 +30,7 @@ async def one(
 
 @overload
 async def one(
-	conn: asyncpg.Connection,
+	pool: asyncpg.Pool,
 	table: str,
 	*,
 	on_conflict: Optional[str] = None,
@@ -41,7 +41,7 @@ async def one(
 
 
 async def one(
-	conn: asyncpg.Connection,
+	pool: asyncpg.Pool,
 	table: str,
 	*,
 	on_conflict: Optional[str] = None,
@@ -53,7 +53,7 @@ async def one(
 	For security reasons it is important that the only user input passed into this function is via the values of `**fields`.
 
 	Args:
-		conn (asyncpg.Connection): The connection to send the query to.
+		pool (asyncpg.Pool): The connection pool to send the query to.
 		table (str): The name of the table to insert into.
 		on_conflict (Optional[str], optional): The on_conflict clause to add to the query. For example can be "DO NOTHING" to suppress errors if the record already exists.
 		returning (Optional[Union[str], Iterable[str]], optional): Either a column name to return just that value, or an iterable of column names to return a tuple of those values, or None to return None. Typically this would be the name of the serial primary key column but doesn't have to be. By default the function returns None.
@@ -64,14 +64,14 @@ async def one(
 	"""
 	keys, values = util.prepare_kwargs(fields)
 	results = await many(
-		conn, table, keys, (values,), on_conflict=on_conflict, returning=returning
+		pool, table, keys, (values,), on_conflict=on_conflict, returning=returning
 	)
 	return results[0] if returning is not None else None
 
 
 @overload
 async def many(
-	conn: asyncpg.Connection,
+	pool: asyncpg.Pool,
 	table: str,
 	columns: Iterable[str],
 	records: Sequence[Sequence],
@@ -84,7 +84,7 @@ async def many(
 
 @overload
 async def many(
-	conn: asyncpg.Connection,
+	pool: asyncpg.Pool,
 	table: str,
 	columns: Iterable[str],
 	records: Sequence[Sequence],
@@ -97,7 +97,7 @@ async def many(
 
 @overload
 async def many(
-	conn: asyncpg.Connection,
+	pool: asyncpg.Pool,
 	table: str,
 	columns: Iterable[str],
 	records: Sequence[Sequence],
@@ -109,7 +109,7 @@ async def many(
 
 
 async def many(
-	conn: asyncpg.Connection,
+	pool: asyncpg.Pool,
 	table: str,
 	columns: Iterable[str],
 	records: Sequence[Sequence],
@@ -120,7 +120,7 @@ async def many(
 	"""Insert many rows into a database.
 
 	Args:
-		conn (asyncpg.Connection): The connection to send the query to.
+		pool (asyncpg.Pool): The connection pool to send the query to.
 		table (str): The name of the table to insert into.
 		columns (Iterable[str]): The column names for which to insert values. The order of the columns must match the order of the values in the parameter `records`.
 		records (Sequence[Sequence]): An sequence containing the rows to insert. Each row must be a sequence of values in the order specified in the `columns` parameter.
@@ -141,13 +141,14 @@ async def many(
 		on_conflict,
 		returning,
 	)
-	async with conn.transaction():
-		results = await conn.fetch(query, *chain(*records))
-		if returning is None:
-			return None
-		if results and len(results[0]) > 1:
-			return results
-		return [result[0] for result in results]
+	async with pool.acquire() as conn:
+		async with conn.transaction():
+			results = await conn.fetch(query, *chain(*records))
+			if returning is None:
+				return None
+			if results and len(results[0]) > 1:
+				return results
+			return [result[0] for result in results]
 
 
 def __with_conflict_returning(

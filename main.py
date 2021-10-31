@@ -27,14 +27,14 @@ bot_ready_triggered = False
 
 async def main():
 	# Connect to the database
-	conn: asyncpg.Connection = await asyncpg.connect(
+	pool: asyncpg.Pool = await asyncpg.create_pool(
 		os.getenv("DATABASE_URL", ""), ssl="require"
 	)
 
 	activity = disnake.Activity(name="/poll", type=ActivityType.listening)
 
 	# empty space effectively disables prefix since discord strips trailing spaces
-	bot = Paul(conn, " ", activity=activity)
+	bot = Paul(pool, " ", activity=activity)
 
 	@bot.event
 	async def on_ready():
@@ -85,12 +85,12 @@ async def main():
 	):
 		await inter.response.send_message(
 			embed=PollEmbedBase(
-				question, "<:loading:904120454975991828> Loading poll..."
+				question, "<a:loading:904120454975991828> Loading poll..."
 			)
 		)
 		message = await inter.original_message()
 		poll = await Poll.create_poll(
-			bot.conn,
+			bot.pool,
 			PollCommandParams(
 				question,
 				options,
@@ -102,7 +102,7 @@ async def main():
 			),
 			inter.author.id,
 		)
-		await message.edit(embed=PollEmbed(poll), view=PollView(poll, conn))
+		await message.edit(embed=PollEmbed(poll), view=PollView(poll, bot))
 
 	@bot.event
 	async def on_slash_command_error(inter: Interaction, error: Exception):

@@ -3,7 +3,6 @@ import asyncpg
 from mention import Mention
 from poll.command_params import PollCommandParams
 import sql
-import disnake
 from .option import Option
 from datetime import datetime
 
@@ -11,6 +10,7 @@ from datetime import datetime
 class Poll:
 	def __init__(
 		self,
+		pool: asyncpg.Pool,
 		poll_id: int,
 		question: str,
 		expires: Optional[datetime],
@@ -20,6 +20,7 @@ class Poll:
 		allowed_editors: Iterable[Mention],
 		allowed_voters: Iterable[Mention],
 	):
+		self.__pool = pool
 		self.__poll_id = poll_id
 		self.__question = question
 		self.__expires = expires
@@ -28,7 +29,12 @@ class Poll:
 		self.__allowed_vote_viewers = tuple(allowed_vote_viewers)
 		self.__allowed_editors = tuple(allowed_editors)
 		self.__allowed_voters = tuple(allowed_voters)
-		self.__options: Tuple
+		self.__options: List
+
+	@property
+	def pool(self) -> asyncpg.Pool:
+		"""Get the connection pool to the database which holds this poll."""
+		return self.__pool
 
 	@property
 	def poll_id(self) -> int:
@@ -43,7 +49,7 @@ class Poll:
 	@property
 	def options(self) -> Tuple[Option, ...]:
 		"""The options of the poll that users can choose from."""
-		return self.__options
+		return tuple(self.__options)
 
 	@property
 	def expires(self) -> Optional[datetime]:
@@ -85,12 +91,26 @@ class Poll:
 		"""Get the sum of the number of votes cast for each option."""
 		return sum(option.vote_count for option in self.options)
 
+	async def add_option(self, label: str, author_id: int) -> Option:
+		"""Add an option to the poll.
+
+		Args:
+			label (str): The label of the option to add.
+			author_id (int): The ID of the user who added the option.
+
+		Returns:
+			Option: The created option.
+		"""
+		option = next(await Option.create_options((label,), self, author_id))
+		self.__options.append(option)
+		return option
+
 	@classmethod
 	async def create_poll(
-		cls, conn: asyncpg.Connection, params: PollCommandParams, author_id: int
+		cls, pool: asyncpg.Pool, params: PollCommandParams, author_id: int
 	) -> "Poll":
 		poll_id: int = await sql.insert.one(
-			conn,
+			pool,
 			"polls",
 			returning="id",
 			question=params.question,
@@ -99,15 +119,16 @@ class Poll:
 			allow_multiple_votes=params.allow_multiple_votes,
 		)
 		await cls.__insert_permissions(
-			conn, "allowed_vote_viewers", params.allowed_vote_viewers, poll_id
+			pool, "allowed_vote_viewers", params.allowed_vote_viewers, poll_id
 		)
 		await cls.__insert_permissions(
-			conn, "allowed_editors", params.allowed_editors, poll_id
+			pool, "allowed_editors", params.allowed_editors, poll_id
 		)
 		await cls.__insert_permissions(
-			conn, "allowed_voters", params.allowed_voters, poll_id
+			pool, "allowed_voters", params.allowed_voters, poll_id
 		)
 		poll = cls(
+			pool,
 			poll_id,
 			params.question,
 			params.expires,
@@ -117,56 +138,56 @@ class Poll:
 			params.allowed_editors,
 			params.allowed_voters,
 		)
-		poll.__options = await Option.create_options(conn, params.options, poll)
+		poll.__options = list(await Option.create_options(params.options, poll))
 		return poll
 
 	@classmethod
-	async def get_active_polls(cls, conn: asyncpg.Connection) -> Set["Poll"]:
+	async def get_active_polls(cls, pool: asyncpg.Pool) -> Set["Poll"]:
 		"""Get the polls which have not yet expired.
 
 		Args:
-			conn (asyncpg.Connection): The database connection to get the active polls from.
+			pool (asyncpg.Pool): The database connection pool to get the active polls from.
 
 		Returns:
 			Set[Poll]:	A set of Poll objects whose expiry date is in the future.
 		"""
 		records = await sql.select.many(
-			conn,
+			pool,
 			"active_polls_view",
 			("id", "question", "expires", "author", "allow_multiple_votes",),
 		)
 		polls = set()
 		for r in records:
 			poll = cls(
+				pool,
 				r["id"],
 				r["question"],
 				r["expires"],
 				r["author"],
 				r["allow_multiple_votes"],
-				await cls.__get_permissions(conn, "allowed_vote_viewers", r["id"]),
-				await cls.__get_permissions(conn, "allowed_editors", r["id"]),
-				await cls.__get_permissions(conn, "allowed_voters", r["id"]),
+				await cls.__get_permissions(pool, "allowed_vote_viewers", r["id"]),
+				await cls.__get_permissions(pool, "allowed_editors", r["id"]),
+				await cls.__get_permissions(pool, "allowed_voters", r["id"]),
 			)
-			poll.__options = tuple(await Option.get_options_of_poll(conn, poll))
+			poll.__options = await Option.get_options_of_poll(poll)
 			polls.add(poll)
 		return polls
 
-	async def remove_votes_from(self, conn: asyncpg.Connection, voter_id: int):
+	async def remove_votes_from(self, voter_id: int):
 		"""Remove all votes from the given user on this poll.
 
 		Args:
-			conn (asyncpg.Connection): A connection to the database.
 			voter_id (int): The ID of the user whose votes should be removed.
 		"""
 		for option in self.options:
-			await option.remove_vote(conn, voter_id)
+			await option.remove_vote(voter_id)
 
 	@staticmethod
 	async def __insert_permissions(
-		conn: asyncpg.Connection, table: str, mentions: Iterable[Mention], poll_id: int
+		pool: asyncpg.Pool, table: str, mentions: Iterable[Mention], poll_id: int
 	):
 		await sql.insert.many(
-			conn,
+			pool,
 			table,
 			("poll_id", "mention_prefix", "mention_id"),
 			[(poll_id, mention.prefix, mention.mentioned_id) for mention in mentions],
@@ -175,13 +196,13 @@ class Poll:
 
 	@staticmethod
 	async def __get_permissions(
-		conn: asyncpg.Connection,
+		pool: asyncpg.Pool,
 		table: Literal["allowed_vote_viewers", "allowed_editors", "allowed_voters"],
 		poll_id: int,
 	) -> List[Mention]:
 		return [
 			Mention(r["mention_prefix"], r["mention_id"])
 			for r in await sql.select.many(
-				conn, table, ("mention_prefix", "mention_id"), poll_id=poll_id
+				pool, table, ("mention_prefix", "mention_id"), poll_id=poll_id
 			)
 		]

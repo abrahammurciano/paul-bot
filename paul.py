@@ -6,16 +6,16 @@ from poll.ui.poll_view import PollView
 
 
 class Paul(Bot):
-	def __init__(self, conn: asyncpg.Connection, *args, **kwargs):
+	def __init__(self, pool: asyncpg.Pool, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.conn = conn
+		self.pool = pool
 		self.__polls: Set[Poll] = set()
 
 	async def load_polls(self):
 		"""Fetch the polls from the database."""
-		self.__polls = await Poll.get_active_polls(self.conn)
+		self.__polls = await Poll.get_active_polls(self.pool)
 		for poll in self.__polls:
-			self.add_view(PollView(poll, self.conn))
+			self.add_view(PollView(poll, self))
 
 	@property
 	def polls(self) -> Set[Poll]:
