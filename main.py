@@ -58,8 +58,8 @@ async def main():
 		),
 		expires: Optional[datetime] = Param(
 			desc=(
-				"When to stop accepting votes, e.g. 1h20m, 1 PM UTC+2, tomorrow, etc."
-				" For fixed times the default timezone is UTC. Default is never."
+				"When to stop accepting votes, e.g. 1h20m or 1pm UTC+2. Default"
+				" timezone is UTC. Default is never."
 			),
 			converter=parse_expires,
 			default=None,

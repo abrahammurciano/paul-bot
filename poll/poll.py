@@ -145,16 +145,22 @@ class Poll:
 		asyncio.create_task(coro())
 
 	async def close(self, bot: "Paul"):
+		"""Close the poll.
+
+		This function will mark it as closed and expired in the database and update the message accordingly.
+
+		Args:
+			bot (Paul): The bot to use to update the message.
+		"""
+		now = datetime.now(pytz.utc)
 		if self.is_active:
-			await sql.update(
-				self.pool,
-				"polls",
-				set={"expires": datetime.now(pytz.utc)},
-				where={"id": self.poll_id},
-			)
+			self.__expires = now
 		await bot.update_poll_message(self)
 		await sql.update(
-			self.pool, "polls", set={"closed": True}, where={"id": self.poll_id}
+			self.pool,
+			"polls",
+			set={"expires": now, "closed": True},
+			where={"id": self.poll_id},
 		)
 
 	async def remove_votes_from(self, voter_id: int):
