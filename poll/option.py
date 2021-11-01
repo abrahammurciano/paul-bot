@@ -1,4 +1,4 @@
-from typing import Generator, Iterable, List, Optional, Set, Tuple, TYPE_CHECKING
+from typing import Generator, Iterable, List, Optional, Set, TYPE_CHECKING
 import asyncpg
 import sql
 
@@ -14,15 +14,13 @@ class Option:
 		option_id: int,
 		label: str,
 		votes: Iterable[int],
-		pool: asyncpg.Pool,
+		poll: "Poll",
 		author_id: Optional[int],
 	):
-		"""NOTE: Always set self.poll after constructing this object."""
 		self.__option_id = option_id
 		self.__label = label
 		self.__votes = set(votes)
-		self.__poll: Poll
-		self.__pool = pool
+		self.__poll = poll
 		self.__author_id = author_id
 
 	@property
@@ -45,16 +43,6 @@ class Option:
 		"""The Poll that the option belongs to."""
 		return self.__poll
 
-	@poll.setter
-	def poll(self, poll: "Poll"):
-		"""Remember to always set this property after construction. It is not done in construction because polls can't be created before their options."""
-		self.__poll = poll
-
-	@property
-	def pool(self) -> asyncpg.Connection:
-		"""Get the connection pool to the database which holds this option."""
-		return self.__pool
-
 	@property
 	def author_id(self) -> Optional[int]:
 		"""The ID of the member who added the option, or None if the option existed from poll creation."""
@@ -72,7 +60,7 @@ class Option:
 			voter_id (int): The ID of the user whose vote is to be removed.
 		"""
 		await sql.delete(
-			self.pool, "votes", option_id=self.option_id, voter_id=voter_id
+			self.poll.pool, "votes", option_id=self.option_id, voter_id=voter_id
 		)
 		self.__votes.discard(voter_id)
 
@@ -85,7 +73,7 @@ class Option:
 		if not self.poll.allow_multiple_votes:
 			await self.poll.remove_votes_from(voter_id)
 		await sql.insert.one(
-			self.pool,
+			self.poll.pool,
 			"votes",
 			on_conflict="DO NOTHING",
 			option_id=self.option_id,
@@ -124,11 +112,7 @@ class Option:
 
 	@classmethod
 	async def create_options(
-		cls,
-		labels: Iterable[str],
-		poll_id: int,
-		pool: asyncpg.Pool,
-		author_id: Optional[int] = None,
+		cls, labels: Iterable[str], poll: "Poll", author_id: Optional[int] = None,
 	) -> Generator["Option", None, None]:
 		"""Create new Option objects for the given poll and add them to the database.
 
@@ -136,46 +120,40 @@ class Option:
 
 		Args:
 			labels (str): The labels of the options to add.
-			poll_id (int): The ID of the poll that this option belongs to.
-			pool (asyncpg.Pool): The connection pool to use to insert the options.
+			poll (Poll): The ID of the poll that this option belongs to.
 			author_id (Optional[int], optional): The ID of the person who added this option, or None if the options were created at the time of creation.
 
 		Returns:
 			Generator[Option, ...]: The new Option objects.
 		"""
 		records = await sql.insert.many(
-			pool,
+			poll.pool,
 			"options",
 			("label", "poll_id", "author"),
-			[(label, poll_id, author_id) for label in labels],
+			[(label, poll.poll_id, author_id) for label in labels],
 			returning="id, label",
 		)
-		return (cls(r["id"], r["label"], (), pool, author_id) for r in records)
+		return (cls(r["id"], r["label"], (), poll, author_id) for r in records)
 
 	@classmethod
-	async def get_options_of_poll(
-		cls, pool: asyncpg.Pool, poll_id: int
-	) -> List["Option"]:
+	async def get_options_of_poll(cls, poll: "Poll") -> List["Option"]:
 		"""Get the options of a poll given its ID.
 
-		NOTE: Don't forget to set option.poll for each returned option after calling this function.
-
 		Args:
-			pool (asyncpg.Pool): The connection pool to use to fetch the options.
-			poll_id (int): The ID of the poll to get the options of.
+			poll (Poll): The ID of the poll to get the options of.
 
 		Returns:
 			List[Option]: A list of Option objects belonging to the given poll.
 		"""
 		records = await sql.select.many(
-			pool, "options", ("id", "label", "author"), poll_id=poll_id
+			poll.pool, "options", ("id", "label", "author"), poll_id=poll.poll_id
 		)
 		return [
 			cls(
 				r["id"],
 				r["label"],
-				await cls.get_voters(pool, r["id"]),
-				pool,
+				await cls.get_voters(poll.pool, r["id"]),
+				poll,
 				r["author"],
 			)
 			for r in records

@@ -57,7 +57,10 @@ async def main():
 			default=("Yes", "No"),
 		),
 		expires: Optional[datetime] = Param(
-			desc="When to stop accepting votes, e.g. 1h20m. Default is never.",
+			desc=(
+				"When to stop accepting votes, e.g. 1h20m, 1 PM UTC+2, tomorrow, etc."
+				" For fixed times the default timezone is UTC. Default is never."
+			),
 			converter=parse_expires,
 			default=None,
 		),
@@ -89,8 +92,7 @@ async def main():
 			)
 		)
 		message = await inter.original_message()
-		poll = await Poll.create_poll(
-			bot.pool,
+		await bot.create_poll(
 			PollCommandParams(
 				question,
 				options,
@@ -102,9 +104,7 @@ async def main():
 			),
 			inter.author.id,
 			message,
-			bot,
 		)
-		await message.edit(embed=PollEmbed(poll), view=PollView(poll, bot))
 
 	@bot.event
 	async def on_slash_command_error(inter: Interaction, error: Exception):

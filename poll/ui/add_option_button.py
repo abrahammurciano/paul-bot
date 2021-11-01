@@ -1,38 +1,33 @@
-from typing import TYPE_CHECKING, Type
-import disnake
-from disnake import utils
-from disnake.emoji import Emoji
+from typing import TYPE_CHECKING
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
 from mention import mentions_str
-from poll.embeds.poll_embed import PollEmbed
-from poll.poll import Poll
 from poll.ui.poll_action_button import PollActionButton
 from poll.ui.util import get_text_input
 
 if TYPE_CHECKING:
-	from poll.ui.poll_view import PollView
+	from poll.poll import Poll
+	from paul import Paul
 
 
 class AddOptionButton(PollActionButton):
-	def __init__(self, poll: Poll, client: disnake.Client, view_cls: Type["PollView"]):
+	def __init__(self, bot: "Paul", poll: "Poll"):
 		"""Construct a Button used to vote for an option.
 
 		Args:
-			poll (Poll): The poll that this button belongs to.
+			bot (Paul): The bot instance.
+			poll (Poll): The poll to add options to when this button gets clicked.
 		"""
 
 		async def add_option(inter: MessageInteraction):
 			if reply := await get_text_input(
 				f"**What option do you want to add?** *(You have one minute to reply)*",
 				inter,
-				client,
+				bot,
 				60.0,
 			):
-				await poll.add_option(reply.content, inter.author.id)
-				await inter.message.edit(
-					embed=PollEmbed(poll), view=view_cls(poll, client)
-				)
+				await poll.new_option(reply.content, inter.author.id)
+				await bot.update_poll_message(poll, inter.message)
 				await reply.add_reaction("✅")
 
 		super().__init__(

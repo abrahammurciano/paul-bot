@@ -1,5 +1,6 @@
 from typing import Callable, List
 from disnake.interactions.base import Interaction
+import pytz
 from errors import FriendlyError
 from datetime import datetime
 import dateparser
@@ -20,12 +21,24 @@ RELATIVE_DATE_PARSE_FIX = re.compile(r"([dhms])(\d)")
 def parse_expires(inter: Interaction, expires: str) -> datetime:
 	# Workaround for https://github.com/scrapinghub/dateparser/issues/1012
 	expires = RELATIVE_DATE_PARSE_FIX.sub(r"\1 \2", expires)
-	result = dateparser.parse(expires, settings={"PREFER_DATES_FROM": "future"})
+	result = dateparser.parse(
+		expires,
+		settings={
+			"PREFER_DATES_FROM": "future",
+			"RETURN_AS_TIMEZONE_AWARE": True,
+			"TO_TIMEZONE": "UTC",
+			"TIMEZONE": "UTC",
+		},
+	)
 	if result is None:
 		raise FriendlyError(
 			f'Could not parse "{expires}" as a date/time.', inter.response
 		)
-	return result
+	return (
+		result.replace(tzinfo=pytz.utc)
+		if result.tzinfo is None or result.tzinfo.utcoffset(result) is None
+		else result
+	)
 
 
 MENTION_REGEX = re.compile(r"<(@[!&])?(\d+)>")
