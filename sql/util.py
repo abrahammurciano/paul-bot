@@ -17,19 +17,19 @@ def where(columns: Sequence[str]) -> str:
 	return "" if not columns else f" WHERE {expressions}"
 
 
-def prepare_kwargs(kwargs: Dict[str, Any]) -> Tuple[Tuple[str, ...], Tuple[Any, ...]]:
-	"""Create two tuples from the provided kwargs.
+def split_dict(dictionary: Dict[str, Any]) -> Tuple[Tuple[str, ...], Tuple[Any, ...]]:
+	"""Create two tuples from the provided dictionary.
 
-	The first tuple is the keys of the kwargs. The second tuple is the values.
+	The first tuple is the keys of the dictionary. The second tuple is the values. They are guaranteed to be in matching order.
 
 	Args:
-		kwargs (Dict[str, Any]): A dictionary of keyword arguments.
+		dictionary (Dict[str, Any]): A dictionary to split.
 
 	Returns:
-		Tuple[Tuple[str], Tuple[Any]]: A tuple containing a tuple of the keys from the kwargs in the first index and a tuple of the values from the kwargs in the second index.
+		Tuple[Tuple[str], Tuple[Any]]: A tuple containing a tuple of the keys from the dictionary in the first index and a tuple of the values from the dictionary in the second index.
 	"""
-	keys = tuple(kwargs.keys())
-	values = tuple(kwargs[key] for key in keys)
+	keys = tuple(dictionary.keys())
+	values = tuple(dictionary[key] for key in keys)
 	return keys, values
 
 

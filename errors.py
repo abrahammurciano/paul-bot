@@ -10,7 +10,7 @@ async def handle_error(error: Exception):
 	error = getattr(error, "original", error)
 	if isinstance(error, FriendlyError):
 		await error.send()
-	logging.error(error)
+	logging.error(error, stack_info=True)
 
 
 class FriendlyError(Exception):

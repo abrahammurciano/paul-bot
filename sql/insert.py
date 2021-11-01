@@ -62,7 +62,7 @@ async def one(
 	Returns:
 		Optional[Any]: If according to the `returning` clause, the insert statement returns a single value, this function returns said value. If the insert statement returns a row of values, this function returns a tuple of the values. If the insert statement returns nothing, this function returns None.
 	"""
-	keys, values = util.prepare_kwargs(fields)
+	keys, values = util.split_dict(fields)
 	results = await many(
 		pool, table, keys, (values,), on_conflict=on_conflict, returning=returning
 	)

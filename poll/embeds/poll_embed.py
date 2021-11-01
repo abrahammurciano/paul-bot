@@ -1,17 +1,19 @@
 from datetime import datetime
-from typing import Generator, Iterable, Optional, Tuple
+from typing import TYPE_CHECKING, Generator, Iterable, Optional, Tuple
 import disnake
 from itertools import count
 from mention import Mention, mentions_str
-from poll import Poll
 from .poll_embed_base import PollEmbedBase
+
+if TYPE_CHECKING:
+	from poll import Poll
 
 
 class PollEmbed(PollEmbedBase):
 	"""Base class for poll embeds."""
 
 	def __init__(
-		self, poll: Poll,
+		self, poll: "Poll",
 	):
 		"""Construct an Embed for the poll.
 
@@ -113,7 +115,7 @@ class PollEmbed(PollEmbedBase):
 		return (
 			f"📣 Your vote can be seen by {mentions_str(viewers)}."
 			if viewers
-			else "🔓 No one can see your vote."
+			else "🔒 No one can see your vote."
 		)
 
 	def voters_text(self, voters: Iterable[Mention]) -> str:
