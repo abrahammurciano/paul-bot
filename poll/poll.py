@@ -1,10 +1,15 @@
-from typing import Iterable, List, Literal, Optional, Set, Tuple, Union, TYPE_CHECKING
+import asyncio
+from typing import Iterable, List, Literal, Optional, Set, Tuple
 import asyncpg
+from disnake import Message, Client
+import pytz
 from mention import Mention
 from poll.command_params import PollCommandParams
+from poll.embeds.poll_closed_embed import PollClosedEmbed
 import sql
 from .option import Option
 from datetime import datetime
+from pytz import UTC
 
 
 class Poll:
@@ -13,23 +18,33 @@ class Poll:
 		pool: asyncpg.Pool,
 		poll_id: int,
 		question: str,
+		options: Iterable[Option],
 		expires: Optional[datetime],
 		author_id: int,
 		allow_multiple_votes: bool,
 		allowed_vote_viewers: Iterable[Mention],
 		allowed_editors: Iterable[Mention],
 		allowed_voters: Iterable[Mention],
+		message_id: int,
+		channel_id: int,
+		client: Client,
 	):
 		self.__pool = pool
 		self.__poll_id = poll_id
 		self.__question = question
+		self.__options = list(options)
 		self.__expires = expires
 		self.__author_id = author_id
 		self.__allow_multiple_votes = allow_multiple_votes
 		self.__allowed_vote_viewers = tuple(allowed_vote_viewers)
 		self.__allowed_editors = tuple(allowed_editors)
 		self.__allowed_voters = tuple(allowed_voters)
-		self.__options: List
+		self.__message_id = message_id
+		self.__channel_id = channel_id
+		self.__client = client
+		for option in self.__options:
+			option.poll = self
+		asyncio.create_task(self.close_when_expired())
 
 	@property
 	def pool(self) -> asyncpg.Pool:
@@ -84,7 +99,7 @@ class Poll:
 	@property
 	def is_active(self) -> bool:
 		"""True if the poll hasn't expired, False otherwise."""
-		return self.expires is None or self.expires > datetime.now()
+		return self.expires is None or self.expires > datetime.now(pytz.utc)
 
 	@property
 	def vote_count(self) -> int:
@@ -101,13 +116,49 @@ class Poll:
 		Returns:
 			Option: The created option.
 		"""
-		option = next(await Option.create_options((label,), self, author_id))
+		option = next(
+			await Option.create_options((label,), self.poll_id, self.pool, author_id)
+		)
+		option.poll = self
 		self.__options.append(option)
 		return option
 
+	async def message(self) -> Message:
+		"""The message containing the poll."""
+		return await self.__client.get_partial_messageable(
+			self.__channel_id
+		).fetch_message(self.__message_id)
+
+	async def close_when_expired(self):
+		"""Wait for the poll to expire, then update the message to reflect the new state."""
+		if self.expires is None:
+			return
+		await asyncio.sleep((self.expires - datetime.now(pytz.utc)).total_seconds())
+		await self.close()
+
+	async def close(self):
+		await (await self.message()).edit(embed=PollClosedEmbed(self), view=None)
+		await sql.update(
+			self.pool, "polls", set={"closed": True}, where={"id": self.poll_id}
+		)
+
+	async def remove_votes_from(self, voter_id: int):
+		"""Remove all votes from the given user on this poll.
+
+		Args:
+			voter_id (int): The ID of the user whose votes should be removed.
+		"""
+		for option in self.options:
+			await option.remove_vote(voter_id)
+
 	@classmethod
 	async def create_poll(
-		cls, pool: asyncpg.Pool, params: PollCommandParams, author_id: int
+		cls,
+		pool: asyncpg.Pool,
+		params: PollCommandParams,
+		author_id: int,
+		message: Message,
+		client: Client,
 	) -> "Poll":
 		poll_id: int = await sql.insert.one(
 			pool,
@@ -117,6 +168,8 @@ class Poll:
 			author=author_id,
 			expires=params.expires,
 			allow_multiple_votes=params.allow_multiple_votes,
+			message=message.id,
+			channel=message.channel.id,
 		)
 		await cls.__insert_permissions(
 			pool, "allowed_vote_viewers", params.allowed_vote_viewers, poll_id
@@ -131,18 +184,21 @@ class Poll:
 			pool,
 			poll_id,
 			params.question,
+			await Option.create_options(params.options, poll_id, pool),
 			params.expires,
 			author_id,
 			params.allow_multiple_votes,
 			params.allowed_vote_viewers,
 			params.allowed_editors,
 			params.allowed_voters,
+			message.id,
+			message.channel.id,
+			client,
 		)
-		poll.__options = list(await Option.create_options(params.options, poll))
 		return poll
 
 	@classmethod
-	async def get_active_polls(cls, pool: asyncpg.Pool) -> Set["Poll"]:
+	async def get_open_polls(cls, pool: asyncpg.Pool, client: Client) -> Set["Poll"]:
 		"""Get the polls which have not yet expired.
 
 		Args:
@@ -153,8 +209,17 @@ class Poll:
 		"""
 		records = await sql.select.many(
 			pool,
-			"active_polls_view",
-			("id", "question", "expires", "author", "allow_multiple_votes",),
+			"polls",
+			(
+				"id",
+				"question",
+				"expires",
+				"author",
+				"allow_multiple_votes",
+				"message",
+				"channel",
+			),
+			closed=False,
 		)
 		polls = set()
 		for r in records:
@@ -162,25 +227,20 @@ class Poll:
 				pool,
 				r["id"],
 				r["question"],
+				await Option.get_options_of_poll(pool, r["id"]),
 				r["expires"],
 				r["author"],
 				r["allow_multiple_votes"],
 				await cls.__get_permissions(pool, "allowed_vote_viewers", r["id"]),
 				await cls.__get_permissions(pool, "allowed_editors", r["id"]),
 				await cls.__get_permissions(pool, "allowed_voters", r["id"]),
+				r["message"],
+				r["channel"],
+				client,
 			)
-			poll.__options = await Option.get_options_of_poll(poll)
-			polls.add(poll)
+			if poll.is_active:
+				polls.add(poll)
 		return polls
-
-	async def remove_votes_from(self, voter_id: int):
-		"""Remove all votes from the given user on this poll.
-
-		Args:
-			voter_id (int): The ID of the user whose votes should be removed.
-		"""
-		for option in self.options:
-			await option.remove_vote(voter_id)
 
 	@staticmethod
 	async def __insert_permissions(

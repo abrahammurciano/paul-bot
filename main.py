@@ -8,7 +8,7 @@ from disnake.ext.commands.params import Param
 from disnake.enums import ActivityType
 from disnake.interactions.application_command import GuildCommandInteraction
 from disnake.interactions.base import Interaction
-from errors import FriendlyError, handle_error
+from errors import handle_error
 from paul import Paul
 from poll import Poll
 from poll.command_params import PollCommandParams
@@ -101,6 +101,8 @@ async def main():
 				allowed_voters,
 			),
 			inter.author.id,
+			message,
+			bot,
 		)
 		await message.edit(embed=PollEmbed(poll), view=PollView(poll, bot))
 

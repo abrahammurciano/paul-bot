@@ -32,6 +32,7 @@ class PollActionButton(disnake.ui.Button):
 		self.__action = action
 
 	async def callback(self, inter: MessageInteraction):
+		await inter.response.defer()
 		if any(
 			mention.includes_member(inter.author) for mention in self.__allowed_clickers
 		):

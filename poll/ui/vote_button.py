@@ -17,7 +17,6 @@ class VoteButton(PollActionButton):
 		option = poll.options[index]
 
 		async def vote(inter: MessageInteraction):
-			await inter.response.defer()
 			await option.toggle_vote(inter.author.id)
 			await inter.message.edit(embed=PollEmbed(poll))
 
