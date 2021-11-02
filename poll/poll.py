@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import TYPE_CHECKING, Iterable, List, Literal, Optional, Set, Tuple
 import asyncpg
 from disnake import Message
@@ -8,7 +9,6 @@ from mention import Mention
 from poll.command_params import PollCommandParams
 from poll.embeds.poll_closed_embed import PollClosedEmbed
 from poll.embeds.poll_embed import PollEmbed
-from poll.ui.poll_view import PollView
 import sql
 from .option import Option
 from datetime import datetime
@@ -30,8 +30,10 @@ class Poll:
 		allowed_voters: Iterable[Mention],
 		message_id: int,
 		channel_id: int,
+		closed: bool,
 		pool: asyncpg.Pool,
 	):
+		logging.info(f"constructing poll {poll_id}")
 		self.__poll_id = poll_id
 		self.__question = question
 		self.__expires = expires
@@ -42,8 +44,10 @@ class Poll:
 		self.__allowed_voters = tuple(allowed_voters)
 		self.__message_id = message_id
 		self.__channel_id = channel_id
+		self.__closed = closed
 		self.__pool = pool
 		self.__options: List[Option] = []
+		logging.info(f"done constructing poll {poll_id}")
 
 	@property
 	def pool(self) -> asyncpg.Pool:
@@ -96,9 +100,14 @@ class Poll:
 		return self.__allowed_voters
 
 	@property
-	def is_active(self) -> bool:
-		"""True if the poll hasn't expired, False otherwise."""
-		return self.expires is None or self.expires > datetime.now(pytz.utc)
+	def is_expired(self) -> bool:
+		"""True if the poll has expired, False otherwise."""
+		return self.expires is not None and self.expires < datetime.now(pytz.utc)
+
+	@property
+	def is_opened(self) -> bool:
+		"""True if the poll is still opened (if the vote buttons are showing), False otherwise."""
+		return not self.__closed
 
 	@property
 	def vote_count(self) -> int:
@@ -107,7 +116,7 @@ class Poll:
 
 	def embed(self) -> disnake.Embed:
 		"""Get the embed for this poll."""
-		return PollEmbed(self) if self.is_active else PollClosedEmbed(self)
+		return PollClosedEmbed(self) if self.is_expired else PollEmbed(self)
 
 	async def new_option(self, label: str, author_id: int) -> Option:
 		"""Add an option to the poll.
@@ -153,7 +162,7 @@ class Poll:
 			bot (Paul): The bot to use to update the message.
 		"""
 		now = datetime.now(pytz.utc)
-		if self.is_active:
+		if not self.is_expired:
 			self.__expires = now
 		await bot.update_poll_message(self)
 		await sql.update(
@@ -172,7 +181,7 @@ class Poll:
 		for option in self.options:
 			await option.remove_vote(voter_id)
 
-	async def __add_options(self, *options: Option):
+	def __add_options(self, *options: Option):
 		"""Add option objects to the poll."""
 		for option in options:
 			self.__options.append(option)
@@ -216,21 +225,24 @@ class Poll:
 			params.allowed_voters,
 			message.id,
 			message.channel.id,
+			False,
 			pool,
 		)
 		await poll.__add_options(*await Option.create_options(params.options, poll))
 		return poll
 
 	@classmethod
-	async def get_open_polls(cls, pool: asyncpg.Pool) -> Set["Poll"]:
-		"""Get the polls which have not yet expired.
+	async def fetch_polls(cls, pool: asyncpg.Pool) -> Set["Poll"]:
+		"""Get all the polls from the database.
 
 		Args:
 			pool (Pool): The connection pool to use to fetch the polls.
 
 		Returns:
-			Set[Poll]:	A set of Poll objects whose expiry date is in the future.
+			Set[Poll]:	A set of Poll objects.
 		"""
+		# TODO: This takes way too long. Use the view "polls_extended_view" to get all the data at once.
+		logging.info("fetching polls")
 		records = await sql.select.many(
 			pool,
 			"polls",
@@ -242,9 +254,11 @@ class Poll:
 				"allow_multiple_votes",
 				"message",
 				"channel",
+				"closed",
 			),
-			closed=False,
 		)
+		logging.info("done fetching polls")
+		logging.info("constructing polls")
 		polls = {
 			cls(
 				r["id"],
@@ -257,12 +271,16 @@ class Poll:
 				await cls.__get_permissions(pool, "allowed_voters", r["id"]),
 				r["message"],
 				r["channel"],
+				r["closed"],
 				pool,
 			)
 			for r in records
 		}
+		logging.info("done constructing polls")
+		logging.info("adding poll options")
 		for poll in polls:
-			await poll.__add_options(*await Option.get_options_of_poll(poll))
+			poll.__add_options(*await Option.get_options_of_poll(poll))
+		logging.info("done adding poll options")
 		return polls
 
 	@staticmethod

@@ -45,4 +45,9 @@ MENTION_REGEX = re.compile(r"<(@[!&])?(\d+)>")
 
 
 def parse_mentions(inter: Interaction, string: str) -> List[Mention]:
+	string = (
+		string.replace("@everyone", f"<@&{inter.guild.default_role.id}>")
+		if inter.guild
+		else string
+	)
 	return [Mention(tup[0], int(tup[1])) for tup in MENTION_REGEX.findall(string)]
