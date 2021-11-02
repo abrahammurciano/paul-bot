@@ -10,7 +10,7 @@ from mention import Mention
 
 def parse_options(sep: str = "|") -> Callable[[Interaction, str], List[str]]:
 	def converter(inter: Interaction, options: str) -> List[str]:
-		return [option.strip() for option in options.split(sep)]
+		return [option.strip() for option in options.split(sep) if option]
 
 	return converter
 
