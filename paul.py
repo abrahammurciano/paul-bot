@@ -1,4 +1,6 @@
 from typing import Dict, Optional
+import disnake
+from disnake.enums import ActivityType
 from disnake.ext.commands.bot import Bot
 import asyncpg
 import logging
@@ -15,6 +17,8 @@ class Paul(Bot):
 		self.pool = pool
 		self.__polls: Dict[int, Poll] = {}
 		self.__polls_readonly = ReadableDict(self.__polls)
+		self.__closed_poll_count = 0
+		self.__activity_name = ""
 
 	async def load_polls(self):
 		"""Fetch the polls from the database and set up the bot to react to poll interactions."""
@@ -23,12 +27,21 @@ class Paul(Bot):
 		)
 		for poll in self.__polls.values():
 			if poll.is_expired:
+				self.__closed_poll_count += 1
 				if poll.is_opened:
 					await poll.close(self)
 			else:
 				poll.close_when_expired(self)
 			self.add_view(PollView(self, poll))
 		logging.info(f"Finished loading {len(self.__polls)} polls.")
+
+	async def set_presence(self):
+		total_polls = len(self.__polls)
+		active_polls = total_polls - self.__closed_poll_count
+		activity_name = f"/poll. {active_polls} active, {total_polls} total."
+		if activity_name != self.__activity_name:
+			activity = disnake.Activity(name=activity_name, type=ActivityType.listening)
+			await self.change_presence(activity=activity)
 
 	async def create_poll(
 		self, params: PollCommandParams, author_id: int, message: Message
@@ -46,6 +59,9 @@ class Paul(Bot):
 		"""
 		message = message or await self.get_poll_message(poll)
 		await message.edit(embed=poll.embed(), view=PollView(self, poll))
+		if poll.is_expired:
+			self.__closed_poll_count += 1
+		await self.set_presence()
 
 	def __add_polls(self, *polls: Poll):
 		self.__polls.update((poll.poll_id, poll) for poll in polls)
