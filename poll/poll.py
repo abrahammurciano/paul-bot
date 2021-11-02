@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING, Iterable, List, Literal, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Iterable, List, Optional, Set, Tuple
 import asyncpg
 from disnake import Message
 import disnake
@@ -8,7 +8,6 @@ from mention import Mention
 from poll.command_params import PollCommandParams
 from poll.embeds.poll_closed_embed import PollClosedEmbed
 from poll.embeds.poll_embed import PollEmbed
-from poll.ui.poll_view import PollView
 import sql
 from .option import Option
 from datetime import datetime
@@ -30,6 +29,7 @@ class Poll:
 		allowed_voters: Iterable[Mention],
 		message_id: int,
 		channel_id: int,
+		closed: bool,
 		pool: asyncpg.Pool,
 	):
 		self.__poll_id = poll_id
@@ -42,6 +42,7 @@ class Poll:
 		self.__allowed_voters = tuple(allowed_voters)
 		self.__message_id = message_id
 		self.__channel_id = channel_id
+		self.__closed = closed
 		self.__pool = pool
 		self.__options: List[Option] = []
 
@@ -96,9 +97,14 @@ class Poll:
 		return self.__allowed_voters
 
 	@property
-	def is_active(self) -> bool:
-		"""True if the poll hasn't expired, False otherwise."""
-		return self.expires is None or self.expires > datetime.now(pytz.utc)
+	def is_expired(self) -> bool:
+		"""True if the poll has expired, False otherwise."""
+		return self.expires is not None and self.expires < datetime.now(pytz.utc)
+
+	@property
+	def is_opened(self) -> bool:
+		"""True if the poll is still opened (if the vote buttons are showing), False otherwise."""
+		return not self.__closed
 
 	@property
 	def vote_count(self) -> int:
@@ -107,7 +113,7 @@ class Poll:
 
 	def embed(self) -> disnake.Embed:
 		"""Get the embed for this poll."""
-		return PollEmbed(self) if self.is_active else PollClosedEmbed(self)
+		return PollClosedEmbed(self) if self.is_expired else PollEmbed(self)
 
 	async def new_option(self, label: str, author_id: int) -> Option:
 		"""Add an option to the poll.
@@ -153,7 +159,7 @@ class Poll:
 			bot (Paul): The bot to use to update the message.
 		"""
 		now = datetime.now(pytz.utc)
-		if self.is_active:
+		if not self.is_expired:
 			self.__expires = now
 		await bot.update_poll_message(self)
 		await sql.update(
@@ -172,7 +178,7 @@ class Poll:
 		for option in self.options:
 			await option.remove_vote(voter_id)
 
-	async def __add_options(self, *options: Option):
+	def __add_options(self, *options: Option):
 		"""Add option objects to the poll."""
 		for option in options:
 			self.__options.append(option)
@@ -216,24 +222,25 @@ class Poll:
 			params.allowed_voters,
 			message.id,
 			message.channel.id,
+			False,
 			pool,
 		)
 		await poll.__add_options(*await Option.create_options(params.options, poll))
 		return poll
 
 	@classmethod
-	async def get_open_polls(cls, pool: asyncpg.Pool) -> Set["Poll"]:
-		"""Get the polls which have not yet expired.
+	async def fetch_polls(cls, pool: asyncpg.Pool) -> Set["Poll"]:
+		"""Get all the polls from the database.
 
 		Args:
 			pool (Pool): The connection pool to use to fetch the polls.
 
 		Returns:
-			Set[Poll]:	A set of Poll objects whose expiry date is in the future.
+			Set[Poll]:	A set of Poll objects.
 		"""
 		records = await sql.select.many(
 			pool,
-			"polls",
+			"polls_extended_view",
 			(
 				"id",
 				"question",
@@ -242,27 +249,34 @@ class Poll:
 				"allow_multiple_votes",
 				"message",
 				"channel",
+				"closed",
+				"options",
+				"allowed_editors",
+				"allowed_vote_viewers",
+				"allowed_voters",
 			),
-			closed=False,
 		)
-		polls = {
-			cls(
+		polls = set()
+		for r in records:
+			poll = cls(
 				r["id"],
 				r["question"],
 				r["expires"],
 				r["author"],
 				r["allow_multiple_votes"],
-				await cls.__get_permissions(pool, "allowed_vote_viewers", r["id"]),
-				await cls.__get_permissions(pool, "allowed_editors", r["id"]),
-				await cls.__get_permissions(pool, "allowed_voters", r["id"]),
+				(
+					Mention(mention[0], mention[1])
+					for mention in r["allowed_vote_viewers"] or ()
+				),
+				(Mention(mention[0], mention[1]) for mention in r["allowed_editors"]),
+				(Mention(mention[0], mention[1]) for mention in r["allowed_voters"]),
 				r["message"],
 				r["channel"],
+				r["closed"],
 				pool,
 			)
-			for r in records
-		}
-		for poll in polls:
-			await poll.__add_options(*await Option.get_options_of_poll(poll))
+			poll.__add_options(*Option.construct_options_of_poll(poll, r["options"]))
+			polls.add(poll)
 		return polls
 
 	@staticmethod
@@ -276,16 +290,3 @@ class Poll:
 			[(poll_id, mention.prefix, mention.mentioned_id) for mention in mentions],
 			on_conflict="DO NOTHING",
 		)
-
-	@staticmethod
-	async def __get_permissions(
-		pool: asyncpg.Pool,
-		table: Literal["allowed_vote_viewers", "allowed_editors", "allowed_voters"],
-		poll_id: int,
-	) -> List[Mention]:
-		return [
-			Mention(r["mention_prefix"], r["mention_id"])
-			for r in await sql.select.many(
-				pool, table, ("mention_prefix", "mention_id"), poll_id=poll_id
-			)
-		]

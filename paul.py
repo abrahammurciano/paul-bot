@@ -19,13 +19,14 @@ class Paul(Bot):
 	async def load_polls(self):
 		"""Fetch the polls from the database and set up the bot to react to poll interactions."""
 		self.__polls.update(
-			{poll.poll_id: poll for poll in await Poll.get_open_polls(self.pool)}
+			{poll.poll_id: poll for poll in await Poll.fetch_polls(self.pool)}
 		)
 		for poll in self.__polls.values():
-			if poll.is_active:
-				poll.close_when_expired(self)
+			if poll.is_expired:
+				if poll.is_opened:
+					await poll.close(self)
 			else:
-				await poll.close(self)
+				poll.close_when_expired(self)
 			self.add_view(PollView(self, poll))
 		logging.info(f"Finished loading {len(self.__polls)} polls.")
 

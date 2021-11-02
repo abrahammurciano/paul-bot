@@ -1,4 +1,4 @@
-from typing import Generator, Iterable, List, Optional, Set, TYPE_CHECKING
+from typing import Generator, Iterable, List, Optional, Set, TYPE_CHECKING, Tuple
 import asyncpg
 import sql
 
@@ -136,25 +136,29 @@ class Option:
 		return (cls(r["id"], r["label"], (), poll, author_id) for r in records)
 
 	@classmethod
-	async def get_options_of_poll(cls, poll: "Poll") -> List["Option"]:
-		"""Get the options of a poll given its ID.
+	def construct_options_of_poll(
+		cls,
+		poll: "Poll",
+		options: List[Tuple[int, str, Optional[int], Optional[Iterable[int]]]],
+	) -> List["Option"]:
+		"""Construct a list of options for a poll given a list of tuples returned from the database.
+
+		The format of these tuples is as follows. The first element is the option' ID. The second element is the option's label. The third is the author's id if the option was added after the poll's creation. The fourth element is a collection of the IDs of the people who voted on the option.
 
 		Args:
-			poll (Poll): The ID of the poll to get the options of.
+			poll (Poll): The polls that these options belong to.
+			options (List[Tuple]): The list of options to construct. Each option is a tuple in the format mentioned above.
 
 		Returns:
-			List[Option]: A list of Option objects belonging to the given poll.
+			List[Option]: A list of the options of the given poll.
 		"""
-		records = await sql.select.many(
-			poll.pool, "options", ("id", "label", "author"), poll_id=poll.poll_id
-		)
 		return [
 			cls(
-				r["id"],
-				r["label"],
-				await cls.get_voters(poll.pool, r["id"]),
-				poll,
-				r["author"],
+				option_id=option[0],
+				label=option[1],
+				votes=option[3] or (),
+				poll=poll,
+				author_id=option[2],
 			)
-			for r in records
+			for option in options
 		]

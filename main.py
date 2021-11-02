@@ -10,16 +10,17 @@ from disnake.interactions.application_command import GuildCommandInteraction
 from disnake.interactions.base import Interaction
 from errors import handle_error
 from paul import Paul
-from poll import Poll
 from poll.command_params import PollCommandParams
 from poll.converters import Mention, parse_expires, parse_mentions, parse_options
-from poll.embeds import PollEmbedBase, PollEmbed
-from poll.ui import PollView
+from poll.embeds import PollEmbedBase
 import logging
 import tracemalloc
 
-
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+	format="%(asctime)s %(levelname)-8s %(message)s",
+	level=logging.INFO,
+	datefmt="%Y-%m-%d %H:%M:%S",
+)
 tracemalloc.start()
 
 bot_ready_triggered = False

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Generator, Iterable, Optional, Tuple
 import disnake
 from itertools import count
 from mention import Mention, mentions_str
+from poll.embeds.colours import get_colour
 from .poll_embed_base import PollEmbedBase
 
 if TYPE_CHECKING:
@@ -23,7 +24,6 @@ class PollEmbed(PollEmbedBase):
 		super().__init__(poll.question)
 		self.poll = poll
 		self.__vote_bar_background = "⬛"
-		self.__vote_bar_foregrounds = ("🟦", "🟥", "🟨", "🟩", "🟪", "🟧")
 		self.__vote_bar_length = 12
 		self.add_options()
 		self.add_details()
@@ -32,11 +32,6 @@ class PollEmbed(PollEmbedBase):
 	def vote_bar_background(self) -> str:
 		"""The emoji to use as the vote bar background."""
 		return self.__vote_bar_background
-
-	@property
-	def vote_bar_foregrounds(self) -> Tuple[str, ...]:
-		"""A tuple of emojis which can be used as the vote bar foreground."""
-		return self.__vote_bar_foregrounds
 
 	@property
 	def vote_bar_length(self) -> int:
@@ -87,9 +82,9 @@ class PollEmbed(PollEmbedBase):
 		added_by = f"*Added by <@{author_id}>*\n" if author_id is not None else ""
 		proportion = option_votes / total_votes if total_votes > 0 else 0
 		squares = round(self.vote_bar_length * proportion)
-		bar = self.vote_bar_foregrounds[
-			index % len(self.vote_bar_foregrounds)
-		] * squares + self.vote_bar_background * (self.vote_bar_length - squares)
+		bar = get_colour(index).emoji * squares + self.vote_bar_background * (
+			self.vote_bar_length - squares
+		)
 		return f"{added_by}{bar}`{round(proportion*100)}% ({option_votes})`"
 
 	def add_details(self):
