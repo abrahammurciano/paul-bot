@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Generator, Iterable, Optional, Tuple
+from typing import TYPE_CHECKING, Generator, Iterable, Optional
 import disnake
 from itertools import count
 from mention import Mention, mentions_str

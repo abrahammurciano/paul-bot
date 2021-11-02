@@ -116,8 +116,6 @@ class Option:
 	) -> Generator["Option", None, None]:
 		"""Create new Option objects for the given poll and add them to the database.
 
-		NOTE: Don't forget to set option.poll on each returned option after calling this function.
-
 		Args:
 			labels (str): The labels of the options to add.
 			poll (Poll): The ID of the poll that this option belongs to.
@@ -129,8 +127,11 @@ class Option:
 		records = await sql.insert.many(
 			poll.pool,
 			"options",
-			("label", "poll_id", "author"),
-			[(label, poll.poll_id, author_id) for label in labels],
+			("label", "poll_id", "author", "index"),
+			[
+				(label, poll.poll_id, author_id, index)
+				for index, label in enumerate(labels)
+			],
 			returning="id, label",
 		)
 		return (cls(r["id"], r["label"], (), poll, author_id) for r in records)

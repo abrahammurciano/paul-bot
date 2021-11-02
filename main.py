@@ -31,7 +31,7 @@ bot_ready_triggered = False
 async def main():
 	# Connect to the database
 	pool: asyncpg.Pool = await asyncpg.create_pool(
-		os.getenv("DATABASE_URL", ""), ssl="require"
+		os.getenv("DATABASE_URL", ""), ssl="require", min_size=5
 	)
 
 	# empty space effectively disables prefix since discord strips trailing spaces
