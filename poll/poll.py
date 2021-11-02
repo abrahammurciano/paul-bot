@@ -1,6 +1,5 @@
 import asyncio
-import logging
-from typing import TYPE_CHECKING, Iterable, List, Literal, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Iterable, List, Optional, Set, Tuple
 import asyncpg
 from disnake import Message
 import disnake
@@ -33,7 +32,6 @@ class Poll:
 		closed: bool,
 		pool: asyncpg.Pool,
 	):
-		logging.info(f"constructing poll {poll_id}")
 		self.__poll_id = poll_id
 		self.__question = question
 		self.__expires = expires
@@ -47,7 +45,6 @@ class Poll:
 		self.__closed = closed
 		self.__pool = pool
 		self.__options: List[Option] = []
-		logging.info(f"done constructing poll {poll_id}")
 
 	@property
 	def pool(self) -> asyncpg.Pool:
@@ -241,11 +238,9 @@ class Poll:
 		Returns:
 			Set[Poll]:	A set of Poll objects.
 		"""
-		# TODO: This takes way too long. Use the view "polls_extended_view" to get all the data at once.
-		logging.info("fetching polls")
 		records = await sql.select.many(
 			pool,
-			"polls",
+			"polls_extended_view",
 			(
 				"id",
 				"question",
@@ -255,32 +250,33 @@ class Poll:
 				"message",
 				"channel",
 				"closed",
+				"options",
+				"allowed_editors",
+				"allowed_vote_viewers",
+				"allowed_voters",
 			),
 		)
-		logging.info("done fetching polls")
-		logging.info("constructing polls")
-		polls = {
-			cls(
+		polls = set()
+		for r in records:
+			poll = cls(
 				r["id"],
 				r["question"],
 				r["expires"],
 				r["author"],
 				r["allow_multiple_votes"],
-				await cls.__get_permissions(pool, "allowed_vote_viewers", r["id"]),
-				await cls.__get_permissions(pool, "allowed_editors", r["id"]),
-				await cls.__get_permissions(pool, "allowed_voters", r["id"]),
+				(
+					Mention(mention[0], mention[1])
+					for mention in r["allowed_vote_viewers"] or ()
+				),
+				(Mention(mention[0], mention[1]) for mention in r["allowed_editors"]),
+				(Mention(mention[0], mention[1]) for mention in r["allowed_voters"]),
 				r["message"],
 				r["channel"],
 				r["closed"],
 				pool,
 			)
-			for r in records
-		}
-		logging.info("done constructing polls")
-		logging.info("adding poll options")
-		for poll in polls:
-			poll.__add_options(*await Option.get_options_of_poll(poll))
-		logging.info("done adding poll options")
+			poll.__add_options(*Option.construct_options_of_poll(poll, r["options"]))
+			polls.add(poll)
 		return polls
 
 	@staticmethod
@@ -294,16 +290,3 @@ class Poll:
 			[(poll_id, mention.prefix, mention.mentioned_id) for mention in mentions],
 			on_conflict="DO NOTHING",
 		)
-
-	@staticmethod
-	async def __get_permissions(
-		pool: asyncpg.Pool,
-		table: Literal["allowed_vote_viewers", "allowed_editors", "allowed_voters"],
-		poll_id: int,
-	) -> List[Mention]:
-		return [
-			Mention(r["mention_prefix"], r["mention_id"])
-			for r in await sql.select.many(
-				pool, table, ("mention_prefix", "mention_id"), poll_id=poll_id
-			)
-		]
