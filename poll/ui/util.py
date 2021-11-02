@@ -2,13 +2,14 @@ import asyncio
 from typing import Optional
 from disnake import Client, Message
 from disnake.interactions.message import MessageInteraction
+from disnake.webhook.async_ import WebhookMessage
 
 
 async def get_text_input(
 	prompt: str, inter: MessageInteraction, client: Client, timeout: float = 60.0
 ) -> Optional[Message]:
 	prompt = f"{inter.author.mention} {prompt}"
-	await inter.followup.send(prompt)
+	prompt_msg = await inter.followup.send(prompt, wait=True)
 	try:
 		message = await client.wait_for(
 			"message",
@@ -17,5 +18,5 @@ async def get_text_input(
 		)
 		return message
 	except asyncio.TimeoutError:
-		await inter.edit_original_message(content=f"~~{prompt}~~ *(Timed out)*")
+		await prompt_msg.edit(content=f"~~{prompt}~~ *(Timed out)*")
 		return None
