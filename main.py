@@ -16,6 +16,8 @@ from poll.embeds import PollEmbedBase
 import logging
 import tracemalloc
 
+import sql
+
 logging.basicConfig(
 	format="%(asctime)s %(levelname)-8s %(message)s",
 	level=logging.INFO,
@@ -32,10 +34,8 @@ async def main():
 		os.getenv("DATABASE_URL", ""), ssl="require"
 	)
 
-	activity = disnake.Activity(name="/poll", type=ActivityType.listening)
-
 	# empty space effectively disables prefix since discord strips trailing spaces
-	bot = Paul(pool, " ", activity=activity)
+	bot = Paul(pool, " ")
 
 	@bot.event
 	async def on_ready():
@@ -43,6 +43,7 @@ async def main():
 		if not bot_ready_triggered:
 			print(f"\n{bot.user.name} has connected to Discord!\n")
 			await bot.load_polls()
+			await bot.set_presence()
 			bot_ready_triggered = True
 
 	@bot.slash_command(desc="Create a poll")
