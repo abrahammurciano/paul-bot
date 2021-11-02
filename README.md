@@ -14,17 +14,17 @@ Hi! I'm Paul; a teeny tiny bot who's good at one thing. Making polls. And when I
 
 Paul has many features. In fact I believe it has the most features out of any other poll bot I could find. After all, that's why I made him; because I couldn't find a feature rich poll bot with an easy and well designed interface.
 
-[x] Uses a slash command to create the poll.
-[x] Uses buttons to vote and interact with existing polls.
-[x] Polls are persistent (That means if the bot goes offline it will remember its old polls when it comes back online)
-[x] Highly customizable permissions for each action (voting, editing, viewing).
-[x] Set expiry dates on polls.
-[x] Option to allow multiple votes per person.
-[x] Option to allow certain people (or everyone) to view the votes.
-[x] Option to allow people to add options to the poll.
-[x] Option to restrict votes to certain roles and/or users.
-[x] Beautiful interface.
-[x] Button for the poll creator to close the poll at will.
+-   Uses a slash command to create the poll.
+-   Uses buttons to vote and interact with existing polls.
+-   Polls are persistent (That means if the bot goes offline it will remember its old polls when it comes back online)
+-   Highly customizable permissions for each action (voting, editing, viewing).
+-   Set expiry dates on polls.
+-   Option to allow multiple votes per person.
+-   Option to allow certain people (or everyone) to view the votes.
+-   Option to allow people to add options to the poll.
+-   Option to restrict votes to certain roles and/or users.
+-   Beautiful interface.
+-   Button for the poll creator to close the poll at will.
 
 ## Usage
 
