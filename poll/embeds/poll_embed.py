@@ -21,7 +21,10 @@ class PollEmbed(PollEmbedBase):
 		Args:
 			poll (Poll): The poll to create an embed for.
 		"""
-		super().__init__(poll.question)
+		super().__init__(
+			poll.question,
+			f"*{poll.vote_count} vote{'s' if poll.vote_count != 1 else ''}*",
+		)
 		self.poll = poll
 		self.__vote_bar_background = "⬛"
 		self.__vote_bar_length = 12
@@ -42,9 +45,14 @@ class PollEmbed(PollEmbedBase):
 	def details(self) -> Iterable[str]:
 		"""A list of lines which will be shown at the bottom of the embed."""
 		return (
-			self.closing_text(self.poll.expires),
-			self.vote_viewers_text(self.poll.allowed_vote_viewers),
-			self.voters_text(self.poll.allowed_voters),
+			s
+			for s in (
+				self.closing_text(self.poll.expires),
+				self.vote_viewers_text(self.poll.allowed_vote_viewers),
+				self.voters_text(self.poll.allowed_voters),
+				self.multiple_votes_text(self.poll.allow_multiple_votes),
+			)
+			if s is not None
 		)
 
 	def option_prefixes(self) -> Generator[str, None, None]:
@@ -115,3 +123,6 @@ class PollEmbed(PollEmbedBase):
 
 	def voters_text(self, voters: Iterable[Mention]) -> str:
 		return f"🗳️ {mentions_str(voters)} may vote."
+
+	def multiple_votes_text(self, allow_multiple_votes: bool) -> Optional[str]:
+		return "🔢 You may vote for multiple options." if allow_multiple_votes else None

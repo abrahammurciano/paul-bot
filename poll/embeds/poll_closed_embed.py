@@ -32,3 +32,10 @@ class PollClosedEmbed(PollEmbed):
 
 	def voters_text(self, voters: Iterable[Mention]) -> str:
 		return f"🗳️ {mentions_str(voters)} was allowed to vote."
+
+	def multiple_votes_text(self, allow_multiple_votes: bool) -> Optional[str]:
+		return (
+			"🔢 Multiple options were allowed to be chosen."
+			if self.poll.allow_multiple_votes
+			else None
+		)
