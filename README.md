@@ -30,7 +30,7 @@ When entering options, you must separate each option with a pipe character (`|`)
 
 ### expires
 
-With this parameter, you can choose when the poll will expire. Once the poll is expired, the vote buttons will disappear.
+With this parameter, you can choose when the poll will expire. Once the poll is expired, the vote buttons will disappear. By default, polls never expire.
 
 When entering the expiry date/time, you may be quite liberal in its format. You can enter a relative date/time, such as "in 2 minutes", "1h20m", "tomorrow", "next week", etc; or you can enter an absolute date/time, such as "5 PM", "26 oct 2022", etc.
 
@@ -51,3 +51,43 @@ With this parameter you can control whether or not to allow people to vote on se
 > `/poll question: Do you like potatoes? allow_multiple_votes: True`
 >
 > ![allow_multiple_votes example](images/examples/allow_multiple_votes.png)
+
+### allowed_vote_viewers
+
+This parameter allows you to specify which users or roles are allowed to see who voted for each option. By default, votes are private and cannot be seen by anyone.
+
+When specifying this parameter, you must mention all the roles and/or users you want to allow.
+
+If this parameter is specified, then an additional button will appear underneath the poll which can be clicked by the allowed people for them to see the votes.
+
+> Example:
+>
+> `/poll question: Do you like potatoes? allowed_vote_viewers: @everyone`
+>
+> ![allowed_vote_viewers example](images/examples/allowed_vote_viewers.png)
+
+### allowed_editors
+
+With this parameter, you can specify who will be allowed to add options to the poll. By default, only you can add options.
+
+People with permission may click the "Add Option" button, after which the bot will prompt them to enter a new option within a minute. When they do, the option will be added to the poll with a note saying who it was added by.
+
+> Example:
+>
+> \*_Click "Add Option" button_
+>
+> ![allowed_editors example](images/examples/allowed_editors.png)
+
+### allowed_voters
+
+Use this parameter to restrict who may vote to a set of users and roles. By default everyone may vote.
+
+> Example:
+>
+> `/poll question: Do you like potatoes? allowed_voters: @Admin|🔱 @Abraham|👑🔱`
+>
+> ![allowed_voters example](images/examples/allowed_voters.png)
+
+### Closing the poll
+
+You can use the big red button to close the poll manually without waiting for it to expire. Once you do this, there's no turning back. Only the poll creator can do this.
