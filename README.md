@@ -2,6 +2,8 @@
 
 Hi! I'm Paul; a teeny tiny bot who's good at one thing. Making polls. And when I say good, I mean really really good. Like the bestest best bot ever at making polls. I can make open polls, I can make closed polls, I can make dynamically editable polls, and I can make them any size. And all that with a simple, good-looking, and easy to use interface! So come on and try me out in your server!
 
+## [Invite Me](https://discord.com/api/oauth2/authorize?client_id=902944827598049321&permissions=2147551296&scope=bot%20applications.commands)
+
 ## Usage
 
 This bot has a very simple interface. There is only one command. `/poll`. Below are the parameters it accepts.
