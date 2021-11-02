@@ -2,7 +2,29 @@
 
 Hi! I'm Paul; a teeny tiny bot who's good at one thing. Making polls. And when I say good, I mean really really good. Like the bestest best bot ever at making polls. I can make open polls, I can make closed polls, I can make dynamically editable polls, and I can make them any size. And all that with a simple, good-looking, and easy to use interface! So come on and try me out in your server!
 
-## [Invite Me](https://discord.com/api/oauth2/authorize?client_id=902944827598049321&permissions=2147551296&scope=bot%20applications.commands)
+## Links
+
+### [Invite Me](https://discord.com/api/oauth2/authorize?client_id=902944827598049321&permissions=2147551296&scope=bot%20applications.commands)
+
+### [GitHub](https://github.com/abrahammurciano/paul-bot)
+
+### [Discord Server](https://discord.com/invite/mzhSRnnY78)
+
+## Features
+
+Paul has many features. In fact I believe it has the most features out of any other poll bot I could find. After all, that's why I made him; because I couldn't find a feature rich poll bot with an easy and well designed interface.
+
+[x] Uses a slash command to create the poll.
+[x] Uses buttons to vote and interact with existing polls.
+[x] Polls are persistent (That means if the bot goes offline it will remember its old polls when it comes back online)
+[x] Highly customizable permissions for each action (voting, editing, viewing).
+[x] Set expiry dates on polls.
+[x] Option to allow multiple votes per person.
+[x] Option to allow certain people (or everyone) to view the votes.
+[x] Option to allow people to add options to the poll.
+[x] Option to restrict votes to certain roles and/or users.
+[x] Beautiful interface.
+[x] Button for the poll creator to close the poll at will.
 
 ## Usage
 
