@@ -225,7 +225,7 @@ class Poll:
 			False,
 			pool,
 		)
-		await poll.__add_options(*await Option.create_options(params.options, poll))
+		poll.__add_options(*await Option.create_options(params.options, poll))
 		return poll
 
 	@classmethod
