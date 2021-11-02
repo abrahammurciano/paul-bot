@@ -130,7 +130,7 @@ class Option:
 			("label", "poll_id", "author", "index"),
 			[
 				(label, poll.poll_id, author_id, index)
-				for index, label in enumerate(labels, start=poll.vote_count)
+				for index, label in enumerate(labels, start=len(poll.options))
 			],
 			returning="id, label",
 		)
