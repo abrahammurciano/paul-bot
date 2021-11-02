@@ -6,6 +6,8 @@ Hi! I'm Paul; a teeny tiny bot who's good at one thing. Making polls. And when I
 
 ### [Invite Me](https://discord.com/api/oauth2/authorize?client_id=902944827598049321&permissions=2147551296&scope=bot%20applications.commands)
 
+### [top.gg](https://top.gg/bot/902944827598049321)
+
 ### [GitHub](https://github.com/abrahammurciano/paul-bot)
 
 ### [Discord Server](https://discord.com/invite/mzhSRnnY78)
