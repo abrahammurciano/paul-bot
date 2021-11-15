@@ -10,7 +10,13 @@ from mention import Mention
 
 def parse_options(sep: str = "|") -> Callable[[Interaction, str], List[str]]:
 	def converter(inter: Interaction, options: str) -> List[str]:
-		return [option.strip() for option in options.split(sep) if option]
+		result = [option.strip() for option in options.split(sep) if option]
+		if len(result) > 23:
+			raise FriendlyError(
+				f'Too many options. Maximum is 23.\nOptions: "{result}"',
+				inter.response,
+			)
+		return result
 
 	return converter
 

@@ -266,7 +266,7 @@ class Poll:
 				r["allow_multiple_votes"],
 				(
 					Mention(mention[0], mention[1])
-					for mention in r["allowed_vote_viewers"] or ()
+					for mention in r["allowed_vote_viewers"]
 				),
 				(Mention(mention[0], mention[1]) for mention in r["allowed_editors"]),
 				(Mention(mention[0], mention[1]) for mention in r["allowed_voters"]),

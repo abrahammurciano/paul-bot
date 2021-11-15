@@ -26,7 +26,11 @@ class PollView(ErrorHandlingView):
 				self.add_item(VoteButton(self.__bot, self.__poll, index))
 
 	def __add_add_option_button(self):
-		if not self.__poll.is_expired and self.__poll.allowed_editors:
+		if (
+			not self.__poll.is_expired
+			and self.__poll.allowed_editors
+			and len(self.__poll.options) < 23
+		):
 			self.add_item(AddOptionButton(self.__bot, self.__poll))
 
 	def __add_see_vote_button(self):
