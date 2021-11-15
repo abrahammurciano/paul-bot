@@ -39,7 +39,10 @@ class Paul(Bot):
 	async def set_presence(self):
 		total_polls = len(self.__polls)
 		active_polls = total_polls - self.__closed_poll_count
-		activity_name = f"/poll. {active_polls} active, {total_polls} total."
+		activity_name = (
+			f"/poll. {active_polls} active, {total_polls} total. ({len(self.guilds)}"
+			" servers)"
+		)
 		if activity_name != self.__activity_name:
 			activity = disnake.Activity(name=activity_name, type=ActivityType.listening)
 			await self.change_presence(activity=activity)
