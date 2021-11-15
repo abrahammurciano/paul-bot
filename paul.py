@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 import disnake
 from disnake.enums import ActivityType
+from disnake.errors import Forbidden
 from disnake.ext.commands.bot import Bot
 import asyncpg
 import logging
@@ -57,8 +58,11 @@ class Paul(Bot):
 			poll (Poll): The poll whose message should be updated.
 			message (Optional[Message], optional): The message containing the poll. If omitted, it will be fetched asynchronously.
 		"""
-		message = message or await self.get_poll_message(poll)
-		await message.edit(embed=poll.embed(), view=PollView(self, poll))
+		try:
+			message = message or await self.get_poll_message(poll)
+			await message.edit(embed=poll.embed(), view=PollView(self, poll))
+		except Forbidden:
+			pass
 		if poll.is_expired:
 			self.__closed_poll_count += 1
 		await self.set_presence()
