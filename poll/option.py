@@ -53,15 +53,17 @@ class Option:
 		"""Get the number of votes for this option."""
 		return len(self.__votes)
 
-	async def remove_vote(self, voter_id: int):
+	async def remove_vote(self, voter_id: int, remove_from_database: bool = True):
 		"""Remove a vote from the given user on this option. If no such vote exists, nothing happens.
 
 		Args:
 			voter_id (int): The ID of the user whose vote is to be removed.
+			remove_from_database (bool): Whether or not to remove the vote from the database. Default is True. Should be False if for example the vote was already removed.
 		"""
-		await sql.delete(
-			self.poll.pool, "votes", option_id=self.option_id, voter_id=voter_id
-		)
+		if remove_from_database:
+			await sql.delete(
+				self.poll.pool, "votes", option_id=self.option_id, voter_id=voter_id
+			)
 		self.__votes.discard(voter_id)
 
 	async def add_vote(self, voter_id: int):
@@ -87,28 +89,10 @@ class Option:
 		Args:
 			voter_id (int): The ID of the user to toggle the vote of.
 		"""
-		if voter_id in self.votes:
+		if voter_id in self.__votes:
 			await self.remove_vote(voter_id)
 		else:
 			await self.add_vote(voter_id)
-
-	@classmethod
-	async def get_voters(cls, pool: asyncpg.Pool, option_id: int) -> Set[int]:
-		"""Fetch the IDs of all the voters for a given option from the database.
-
-		Args:
-			pool (asyncpg.Pool): The connection pool to the database.
-			option_id (int): The ID of the option to fetch the voters for.
-
-		Returns:
-			List[int]: A list of the IDs of the members who voted on the option.
-		"""
-		return {
-			r["voter_id"]
-			for r in await sql.select.many(
-				pool, "votes", ("voter_id",), option_id=option_id
-			)
-		}
 
 	@classmethod
 	async def create_options(
