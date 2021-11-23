@@ -70,5 +70,6 @@
 		"vue",
 		"xml",
 		"xsl"
-	]
+	],
+	"cmake.configureOnOpen": false
 }

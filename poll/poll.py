@@ -175,8 +175,14 @@ class Poll:
 		Args:
 			voter_id (int): The ID of the user whose votes should be removed.
 		"""
+		await sql.delete(
+			self.pool,
+			"votes",
+			f"option_id in (select id from options where poll_id = {self.poll_id})",
+			voter_id=voter_id,
+		)
 		for option in self.options:
-			await option.remove_vote(voter_id)
+			await option.remove_vote(voter_id, remove_from_database=False)
 
 	def __add_options(self, *options: Option):
 		"""Add option objects to the poll."""
