@@ -7,7 +7,7 @@ from poll.embeds.colours import get_colour
 from .poll_embed_base import PollEmbedBase
 
 if TYPE_CHECKING:
-	from poll import Poll
+	from application.poll import Poll
 
 
 class PollEmbed(PollEmbedBase):

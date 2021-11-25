@@ -5,7 +5,7 @@ from mention import Mention, mentions_str
 from poll.embeds.poll_embed import PollEmbed
 
 if TYPE_CHECKING:
-	from poll import Poll
+	from application.poll import Poll
 
 
 class PollClosedEmbed(PollEmbed):

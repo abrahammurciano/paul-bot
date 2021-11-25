@@ -1,18 +1,18 @@
 from typing import TYPE_CHECKING
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
-from mention import Mention
+from application.mention import Mention
 from .poll_action_button import PollActionButton
+from application.poll import Poll
 
 if TYPE_CHECKING:
-	from poll.poll import Poll
 	from paul import Paul
 
 
 class ClosePollButton(PollActionButton):
 	def __init__(self, bot: "Paul", poll: "Poll"):
 		async def close_poll(_: MessageInteraction):
-			await poll.close(bot)
+			await bot.close_poll_now(poll)
 
 		author_mention = Mention("@", poll.author_id)
 		super().__init__(
