@@ -28,9 +28,10 @@ class Paul(Bot):
 		)
 		for poll in self.__polls.values():
 			if poll.is_expired:
-				self.__closed_poll_count += 1
 				if poll.is_opened:
 					await poll.close(self)
+				else:
+					self.__closed_poll_count += 1
 			else:
 				poll.close_when_expired(self)
 			self.add_view(PollView(self, poll))
@@ -46,6 +47,7 @@ class Paul(Bot):
 		if activity_name != self.__activity_name:
 			activity = disnake.Activity(name=activity_name, type=ActivityType.listening)
 			await self.change_presence(activity=activity)
+			self.__activity_name = activity_name
 
 	async def create_poll(
 		self, params: PollCommandParams, author_id: int, message: Message
