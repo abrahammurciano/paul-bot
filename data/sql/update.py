@@ -1,6 +1,6 @@
 from typing import Any, Dict
 import asyncpg
-from sql import util
+from data.sql import util
 
 
 async def update(

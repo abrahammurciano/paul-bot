@@ -5,8 +5,8 @@ from disnake.emoji import Emoji
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
 from disnake.partial_emoji import PartialEmoji
-from errors import FriendlyError
-from mention import Mention, mentions_str
+from presentation.errors import FriendlyError
+from application.mention import Mention, mentions_str
 
 
 class PollActionButton(disnake.ui.Button):

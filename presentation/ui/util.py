@@ -2,7 +2,6 @@ import asyncio
 from typing import Optional
 from disnake import Client, Message
 from disnake.interactions.message import MessageInteraction
-from disnake.webhook.async_ import WebhookMessage
 
 
 async def get_text_input(

@@ -1,5 +1,5 @@
 from typing import Iterable, Optional
-from mention import Mention
+from application.mention import Mention
 from datetime import datetime
 from typing import Iterable
 from dataclasses import dataclass
