@@ -1,3 +1,4 @@
+import asyncio
 from typing import Iterable, List, Optional, Set, TYPE_CHECKING
 import data
 
@@ -82,8 +83,10 @@ class Option:
 		Args:
 			voter_id (int): The ID of the user whose vote is to be deleted.
 		"""
-		await data.cruds.votes_crud.delete_users_votes_from_option(
-			self.option_id, voter_id
+		asyncio.create_task(
+			data.cruds.votes_crud.delete_users_votes_from_option(
+				self.option_id, voter_id
+			)
 		)
 		self.remove_vote(voter_id)
 
@@ -95,7 +98,7 @@ class Option:
 		"""
 		if not self.poll.allow_multiple_votes:
 			await self.poll.remove_votes_from(voter_id)
-		await data.cruds.votes_crud.add(self.option_id, voter_id)
+		asyncio.create_task(data.cruds.votes_crud.add(self.option_id, voter_id))
 		self.__votes.add(voter_id)
 
 	async def toggle_vote(self, voter_id: int):
