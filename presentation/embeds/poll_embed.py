@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Generator, Iterable, Optional
 import disnake
 from itertools import count
-from mention import Mention, mentions_str
-from poll.embeds.colours import get_colour
+from application.mention import Mention, mentions_str
+from presentation.embeds.colours import get_colour
 from .poll_embed_base import PollEmbedBase
 
 if TYPE_CHECKING:

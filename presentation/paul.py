@@ -1,5 +1,5 @@
 import asyncio
-from typing import Iterable, List, Optional, Set
+from typing import Iterable, List, Optional
 import disnake
 from disnake.enums import ActivityType
 from disnake.errors import Forbidden
@@ -7,8 +7,10 @@ from disnake.ext.commands.bot import Bot
 import logging
 from disnake.ext.commands.params import Param
 from disnake.interactions.application_command import GuildCommandInteraction
+from disnake.interactions.message import MessageInteraction
 from disnake.message import Message
 from application import Poll
+from application.option import Option
 from presentation.command_params import PollCommandParams
 from presentation.ui.poll_view import PollView
 from presentation.embeds.poll_closed_embed import PollClosedEmbed
@@ -18,14 +20,14 @@ from presentation.converters import parse_expires, parse_mentions, parse_options
 from datetime import datetime
 from application import Mention
 from disnake.interactions.base import Interaction
-from errors import handle_error
+from presentation.errors import handle_error
 import pytz
 
 
 class Paul(Bot):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.__polls: Set[Poll] = set()
+		self.__total_poll_count = 0
 		self.__closed_poll_count = 0
 		self.__activity_name = ""
 		self.__on_ready_triggered = False
@@ -34,8 +36,8 @@ class Paul(Bot):
 		async def on_ready():
 			if not self.__on_ready_triggered:
 				logging.info(f"\n{self.user.name} has connected to Discord!\n")
-				await self.load_polls()
-				await self.set_presence()
+				await self.__load_polls()
+				await self.__set_presence()
 				self.__on_ready_triggered = True
 
 		@self.event
@@ -107,18 +109,63 @@ class Paul(Bot):
 				message,
 			)
 
-	async def load_polls(self):
+	async def close_poll_now(self, poll: Poll, message: Optional[Message] = None):
+		"""Close a poll immediately.
+
+		Args:
+			poll (Poll): The poll to close.
+			message (Optional[Message]): The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
+		"""
+		await poll.close()
+		await self.__update_poll_message(poll, message)
+		self.__closed_poll_count += 1
+		await self.__set_presence()
+
+	async def new_poll(
+		self, params: PollCommandParams, author_id: int, message: Message
+	):
+		poll = await Poll.create_poll(params, author_id, message)
+		self.__total_poll_count += 1
+		await self.__update_poll_message(poll, message)
+		await self.__set_presence()
+		asyncio.create_task(self.__poll_close_task(poll))
+
+	async def add_poll_option(
+		self, poll: Poll, label: str, author_id: int, message: Optional[Message] = None
+	):
+		"""Add a new option to the given poll.
+
+		Args:
+			poll (Poll): The poll to add the option to.
+			label (str): The label of the option.
+			author_id (int): The ID of the user who added the option.
+			message (Optional[Message], optional): The message containing the poll. If omitted, it will be fetched asynchronously.
+		"""
+		await poll.new_option(label, author_id)
+		await self.__update_poll_message(poll, message)
+
+	async def toggle_vote(self, option: Option, voter_id: int):
+		"""Toggle a voter's vote for an option, removing the voter's vote from another option if necessary.
+
+		Args:
+			option (Option): The option to vote for.
+			voter_id (int): The ID of the user who voted.
+		"""
+		await option.toggle_vote(voter_id)
+		await self.__update_poll_message(option.poll)
+
+	async def __load_polls(self):
 		"""Fetch the polls from the database and set up the bot to react to poll interactions."""
-		self.__polls.update(poll for poll in await Poll.fetch_polls())
-		for poll in self.__polls:
+		for poll in await Poll.fetch_polls():
+			self.__total_poll_count += 1
 			if poll.is_opened:
-				asyncio.create_task(self.close_poll_task(poll))
+				asyncio.create_task(self.__poll_close_task(poll))
 			else:
 				self.__closed_poll_count += 1
 			self.add_view(PollView(self, poll))
 		logging.info(f"Finished loading {len(self.__polls)} polls.")
 
-	async def poll_close_task(self, poll: Poll, message: Optional[Message] = None):
+	async def __poll_close_task(self, poll: Poll, message: Optional[Message] = None):
 		"""Close a poll at a specific time.
 
 		This function blocks until the poll is closed if awaited, so you probably want to make it run in the background instead.
@@ -132,40 +179,9 @@ class Paul(Bot):
 		await asyncio.sleep((self.expires - datetime.now(pytz.utc)).total_seconds())
 		await self.close_poll_now(poll, message)
 
-	async def close_poll_now(self, poll: Poll, message: Optional[Message] = None):
-		"""Close a poll immediately.
-
-		Args:
-			poll (Poll): The poll to close.
-			message (Optional[Message]): The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
-		"""
-		await poll.close()
-		await self.update_poll_message(poll, message)
-		self.__closed_poll_count += 1
-		await self.set_presence()
-
-	async def set_presence(self):
-		total_polls = len(self.__polls)
-		active_polls = total_polls - self.__closed_poll_count
-		activity_name = (
-			f"/poll. {active_polls} active, {total_polls} total. ({len(self.guilds)}"
-			" servers)"
-		)
-		if activity_name != self.__activity_name:
-			activity = disnake.Activity(name=activity_name, type=ActivityType.listening)
-			await self.change_presence(activity=activity)
-			self.__activity_name = activity_name
-
-	async def new_poll(
-		self, params: PollCommandParams, author_id: int, message: Message
+	async def __update_poll_message(
+		self, poll: Poll, message: Optional[Message] = None
 	):
-		poll = await Poll.create_poll(params, author_id, message)
-		self.__polls.add(poll)
-		await self.update_poll_message(poll, message)
-		await self.set_presence()
-		asyncio.create_task(self.close_poll_task(poll))
-
-	async def update_poll_message(self, poll: Poll, message: Optional[Message] = None):
 		"""Update the poll's message. This should be called after a poll changes.
 
 		Args:
@@ -173,7 +189,7 @@ class Paul(Bot):
 			message (Optional[Message], optional): The message containing the poll. If omitted, it will be fetched asynchronously.
 		"""
 		try:
-			message = message or await self.get_poll_message(poll)
+			message = message or await self.__get_poll_message(poll)
 			await message.edit(
 				embed=PollClosedEmbed(poll) if poll.is_expired else PollEmbed(poll),
 				view=PollView(self, poll),
@@ -181,7 +197,18 @@ class Paul(Bot):
 		except Forbidden:
 			pass
 
-	async def get_poll_message(self, poll: Poll) -> Message:
+	async def __get_poll_message(self, poll: Poll) -> Message:
 		return await self.get_partial_messageable(poll.channel_id).fetch_message(
 			poll.message_id
 		)
+
+	async def __set_presence(self):
+		active_polls = self.__total_poll_count - self.__closed_poll_count
+		activity_name = (
+			f"/poll. {active_polls} active, {self.__total_poll_count} total."
+			f" ({len(self.guilds)} servers)"
+		)
+		if activity_name != self.__activity_name:
+			activity = disnake.Activity(name=activity_name, type=ActivityType.listening)
+			await self.change_presence(activity=activity)
+			self.__activity_name = activity_name

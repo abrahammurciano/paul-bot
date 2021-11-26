@@ -1,7 +1,7 @@
 from typing import Iterable, List, Optional, Set, Tuple
 from disnake import Message
 import pytz
-from mention import Mention
+from application.mention import Mention
 from presentation.command_params import PollCommandParams
 import data
 from .option import Option

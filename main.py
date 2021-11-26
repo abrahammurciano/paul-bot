@@ -1,7 +1,7 @@
 import asyncio
 import os
 import application
-from paul import Paul
+from presentation.paul import Paul
 import logging
 import tracemalloc
 

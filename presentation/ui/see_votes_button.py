@@ -1,17 +1,16 @@
 from typing import Iterable, List, Optional, Tuple, TypeVar
 import disnake
-from disnake.embeds import Embed
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
-from poll.embeds.question_results_embed import QuestionResultsEmbed
-from poll.embeds.see_option_results_embed import SeeOptionResultsEmbed
-from poll.poll import Poll
+from presentation.embeds.question_results_embed import QuestionResultsEmbed
+from presentation.embeds.see_option_results_embed import SeeOptionResultsEmbed
+from application.poll import Poll
 from .poll_action_button import PollActionButton
 from itertools import zip_longest
 
 
 class SeeVotesButton(PollActionButton):
-	def __init__(self, bot, poll: Poll):
+	def __init__(self, poll: Poll):
 		async def show_votes(inter: MessageInteraction):
 			embeds: List[disnake.Embed] = [QuestionResultsEmbed(poll)]
 			embeds.extend(

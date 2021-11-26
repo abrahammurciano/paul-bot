@@ -1,7 +1,7 @@
 from typing import Optional
 import disnake
 
-from poll.embeds import colours
+from presentation.embeds import colours
 
 
 class PollEmbedBase(disnake.Embed):

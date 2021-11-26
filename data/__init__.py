@@ -1,9 +1,9 @@
 import os
-import cruds
+from data import cruds
 import asyncpg
-from polls_crud import PollsCrud
-from options_crud import OptionsCrud
-from votes_crud import VotesCrud
+from data.polls_crud import PollsCrud
+from data.options_crud import OptionsCrud
+from data.votes_crud import VotesCrud
 
 
 async def init():

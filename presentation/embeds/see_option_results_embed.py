@@ -1,6 +1,6 @@
 import disnake
-from poll.embeds.colours import get_colour
-from poll.option import Option
+from presentation.embeds.colours import get_colour
+from application.option import Option
 
 
 class SeeOptionResultsEmbed(disnake.Embed):

@@ -1,1 +1,1 @@
-worker: python presentation/main.py
+worker: python main.py

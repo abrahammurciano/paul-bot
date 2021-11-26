@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class ClosePollButton(PollActionButton):
-	def __init__(self, bot: "Paul", poll: "Poll"):
+	def __init__(self, bot: "Paul", poll: Poll):
 		async def close_poll(_: MessageInteraction):
 			await bot.close_poll_now(poll)
 

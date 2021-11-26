@@ -1,17 +1,20 @@
 from datetime import datetime
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Iterable, List, Optional, Set, Tuple, TYPE_CHECKING
 import asyncpg
-from application import Poll, Mention
+from application.mention import Mention
 from application.option import Option
 from data.cruds import Crud
 from . import sql
+
+if TYPE_CHECKING:
+	from application.poll import Poll
 
 
 class PollsCrud(Crud):
 	def __init__(self, pool: asyncpg.pool.Pool):
 		super().__init__(pool)
 
-	async def add(self, poll: Poll) -> int:
+	async def add(self, poll: "Poll") -> int:
 		"""Add a poll to the database.
 
 		During this operation, the poll's ID is set to the database's auto-incremented ID.
@@ -54,7 +57,7 @@ class PollsCrud(Crud):
 			on_conflict="DO NOTHING",
 		)
 
-	async def fetch_all(self) -> Set[Poll]:
+	async def fetch_all(self) -> Set["Poll"]:
 		"""Get all the polls from the database.
 
 		Args:
@@ -104,7 +107,7 @@ class PollsCrud(Crud):
 			polls.add(poll)
 		return polls
 
-	async def update_expiry(self, poll: Poll, expires: datetime, closed: bool):
+	async def update_expiry(self, poll: "Poll", expires: datetime, closed: bool):
 		"""Update the expiry date of a poll and set its closed status accordingly.
 
 		Args:

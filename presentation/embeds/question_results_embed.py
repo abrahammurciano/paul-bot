@@ -1,5 +1,5 @@
 import disnake
-from poll.poll import Poll
+from application.poll import Poll
 from . import colours
 
 
