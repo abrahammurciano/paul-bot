@@ -84,6 +84,10 @@ class PollsCrud(Crud):
 				"allowed_voters",
 			),
 		)
+
+		# must be imported here to avoid circular imports
+		from application.poll import Poll
+
 		polls = set()
 		for r in records:
 			poll = Poll(
@@ -102,7 +106,7 @@ class PollsCrud(Crud):
 				r["channel"],
 				r["closed"],
 			)
-			for option in __parse_options(poll, r["options"]):
+			for option in self.__parse_options(poll, r["options"]):
 				poll.add_option(option)
 			polls.add(poll)
 		return polls
@@ -122,30 +126,30 @@ class PollsCrud(Crud):
 			where={"id": poll.poll_id},
 		)
 
+	def __parse_options(
+		self,
+		poll: "Poll",
+		options: List[Tuple[int, str, Optional[int], Optional[Iterable[int]], int]],
+	) -> List[Option]:
+		"""Construct a list of options for a poll given a list of tuples returned from the database.
 
-def __parse_options(
-	poll: "Poll",
-	options: List[Tuple[int, str, Optional[int], Optional[Iterable[int]], int]],
-) -> List[Option]:
-	"""Construct a list of options for a poll given a list of tuples returned from the database.
+		The format of these tuples is as follows. The first element is the option' ID. The second element is the option's label. The third is the author's id if the option was added after the poll's creation. The fourth element is a collection of the IDs of the people who voted on the option. The fifth element is the index of the option within the poll.
 
-	The format of these tuples is as follows. The first element is the option' ID. The second element is the option's label. The third is the author's id if the option was added after the poll's creation. The fourth element is a collection of the IDs of the people who voted on the option. The fifth element is the index of the option within the poll.
+		Args:
+			poll (Poll): The polls that these options belong to.
+			options (List[Tuple]): The list of options to construct. Each option is a tuple in the format mentioned above.
 
-	Args:
-		poll (Poll): The polls that these options belong to.
-		options (List[Tuple]): The list of options to construct. Each option is a tuple in the format mentioned above.
-
-	Returns:
-		List[Option]: A list of the options of the given poll.
-	"""
-	return [
-		Option(
-			option_id=option[0],
-			label=option[1],
-			votes=option[3] or (),
-			poll=poll,
-			index=option[4],
-			author_id=option[2],
-		)
-		for option in options
-	]
+		Returns:
+			List[Option]: A list of the options of the given poll.
+		"""
+		return [
+			Option(
+				option_id=option[0],
+				label=option[1],
+				votes=option[3] or (),
+				poll=poll,
+				index=option[4],
+				author_id=option[2],
+			)
+			for option in options
+		]

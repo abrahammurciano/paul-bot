@@ -163,7 +163,7 @@ class Paul(Bot):
 			else:
 				self.__closed_poll_count += 1
 			self.add_view(PollView(self, poll))
-		logging.info(f"Finished loading {len(self.__polls)} polls.")
+		logging.info(f"Finished loading {self.__total_poll_count} polls.")
 
 	async def __poll_close_task(self, poll: Poll, message: Optional[Message] = None):
 		"""Close a poll at a specific time.
@@ -176,7 +176,7 @@ class Paul(Bot):
 		"""
 		if poll.expires is None:
 			return
-		await asyncio.sleep((self.expires - datetime.now(pytz.utc)).total_seconds())
+		await asyncio.sleep((poll.expires - datetime.now(pytz.utc)).total_seconds())
 		await self.close_poll_now(poll, message)
 
 	async def __update_poll_message(
