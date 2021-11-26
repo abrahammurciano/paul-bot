@@ -116,7 +116,7 @@ class Paul(Bot):
 			poll (Poll): The poll to close.
 			message (Optional[Message]): The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
 		"""
-		await poll.close()
+		poll.close()
 		await self.__update_poll_message(poll, message)
 		self.__closed_poll_count += 1
 		await self.__set_presence()
@@ -151,7 +151,7 @@ class Paul(Bot):
 			option (Option): The option to vote for.
 			voter_id (int): The ID of the user who voted.
 		"""
-		await option.toggle_vote(voter_id)
+		option.toggle_vote(voter_id)
 		await self.__update_poll_message(option.poll)
 
 	async def __load_polls(self):

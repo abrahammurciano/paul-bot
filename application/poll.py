@@ -1,3 +1,4 @@
+import asyncio
 from typing import Iterable, List, Optional, Set, Tuple
 from disnake import Message
 import pytz
@@ -125,7 +126,7 @@ class Poll:
 		self.add_option(option)
 		return option
 
-	async def close(self):
+	def close(self):
 		"""Close the poll.
 
 		This function will mark it as closed and expired in the database and update the message accordingly.
@@ -136,15 +137,17 @@ class Poll:
 		now = datetime.now(pytz.utc)
 		if not self.is_expired:
 			self.__expires = now
-		await data.cruds.polls_crud.update_expiry(self, now, closed=True)
+		asyncio.create_task(data.cruds.polls_crud.update_expiry(self, now, closed=True))
 
-	async def remove_votes_from(self, voter_id: int):
+	def remove_votes_from(self, voter_id: int):
 		"""Remove all votes from the given user on this poll.
 
 		Args:
 			voter_id (int): The ID of the user whose votes should be removed.
 		"""
-		await data.cruds.votes_crud.delete_users_votes_from_poll(self.poll_id, voter_id)
+		asyncio.create_task(
+			data.cruds.votes_crud.delete_users_votes_from_poll(self.poll_id, voter_id)
+		)
 		for option in self.options:
 			option.remove_vote(voter_id)
 

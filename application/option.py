@@ -1,3 +1,4 @@
+import asyncio
 from typing import Iterable, List, Optional, Set, TYPE_CHECKING
 import data
 
@@ -74,7 +75,7 @@ class Option:
 		"""
 		self.__votes.discard(voter_id)
 
-	async def delete_vote(self, voter_id: int):
+	def delete_vote(self, voter_id: int):
 		"""Delete a vote from the given user on this option. If no such vote exists, nothing happens.
 
 		This method deletes the vote from the database. To remove the vote from the option without affecting the database (for example if the vote has already been removed from the database), use the `remove_vote` method instead.
@@ -82,32 +83,34 @@ class Option:
 		Args:
 			voter_id (int): The ID of the user whose vote is to be deleted.
 		"""
-		await data.cruds.votes_crud.delete_users_votes_from_option(
-			self.option_id, voter_id
+		asyncio.create_task(
+			data.cruds.votes_crud.delete_users_votes_from_option(
+				self.option_id, voter_id
+			)
 		)
 		self.remove_vote(voter_id)
 
-	async def add_vote(self, voter_id: int):
+	def add_vote(self, voter_id: int):
 		"""Add a vote from the given user on this option. If such a vote already exists, nothing happens. If the poll cannot have more than one vote per user, all other votes from this user are removed.
 
 		Args:
 			voter_id (int): The ID of the user whose vote is to be added.
 		"""
 		if not self.poll.allow_multiple_votes:
-			await self.poll.remove_votes_from(voter_id)
-		await data.cruds.votes_crud.add(self.option_id, voter_id)
+			self.poll.remove_votes_from(voter_id)
+		asyncio.create_task(data.cruds.votes_crud.add(self.option_id, voter_id))
 		self.__votes.add(voter_id)
 
-	async def toggle_vote(self, voter_id: int):
+	def toggle_vote(self, voter_id: int):
 		"""Toggle a user's vote on this option. If adding their vote would cause too many votes from the same user, the rest of their votes are removed.
 
 		Args:
 			voter_id (int): The ID of the user to toggle the vote of.
 		"""
 		if voter_id in self.__votes:
-			await self.remove_vote(voter_id)
+			self.delete_vote(voter_id)
 		else:
-			await self.add_vote(voter_id)
+			self.add_vote(voter_id)
 
 	@classmethod
 	async def create_option(
