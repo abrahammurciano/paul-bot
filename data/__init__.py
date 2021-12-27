@@ -8,7 +8,7 @@ from data.votes_crud import VotesCrud
 
 async def init():
 	pool = await asyncpg.create_pool(
-		os.getenv("DATABASE_URL", ""), ssl="require", min_size=3, max_size=5
+		os.getenv("DATABASE_URL", ""), ssl="require", min_size=2, max_size=2
 	)
 	cruds.polls_crud = PollsCrud(pool)
 	cruds.options_crud = OptionsCrud(pool)
