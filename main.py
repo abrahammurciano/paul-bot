@@ -9,6 +9,10 @@ logging.basicConfig(
 	format="%(asctime)s %(levelname)-8s %(message)s",
 	level=logging.INFO,
 	datefmt="%Y-%m-%d %H:%M:%S",
+	handlers=[
+		logging.FileHandler("ouput.log"),
+		logging.StreamHandler()
+	]
 )
 tracemalloc.start()
 
