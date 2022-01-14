@@ -111,7 +111,6 @@ class Paul(Bot):
 				inter.author.id,
 				message,
 			)
-			logger.debug(f"Poll created: {question}")
 
 	async def close_poll_now(self, poll: Poll, message: Optional[Message] = None):
 		"""Close a poll immediately.
