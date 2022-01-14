@@ -5,12 +5,16 @@ from disnake.interactions.base import InteractionResponse
 from disnake.interactions.message import MessageInteraction
 from disnake.ui.item import Item
 
+logger = logging.getLogger(f"paul.{__name__}")
+
 
 async def handle_error(error: Exception):
 	error = getattr(error, "original", error)
 	if isinstance(error, FriendlyError):
+		logger.debug(f"Handling FriendlyError: {error.message}")
 		await error.send()
-	logging.error(error, stack_info=True)
+	else:
+		logger.exception("Something went wrong...")
 
 
 class FriendlyError(Exception):

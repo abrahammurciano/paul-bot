@@ -23,6 +23,8 @@ from disnake.interactions.base import Interaction
 from presentation.errors import handle_error
 import pytz
 
+logger = logging.getLogger(f"paul.{__name__}")
+
 
 class Paul(Bot):
 	def __init__(self, *args, **kwargs):
@@ -35,7 +37,7 @@ class Paul(Bot):
 		@self.event
 		async def on_ready():
 			if not self.__on_ready_triggered:
-				logging.info(f"\n{self.user.name} has connected to Discord!\n")
+				logger.info(f"\n{self.user.name} has connected to Discord!\n")
 				await self.__load_polls()
 				await self.__set_presence()
 				self.__on_ready_triggered = True
@@ -89,6 +91,7 @@ class Paul(Bot):
 				converter=parse_mentions,
 			),
 		):
+			logger.debug(f"{inter.author.name} created a poll {question}.")
 			await inter.response.send_message(
 				embed=PollEmbedBase(
 					question, "<a:loading:904120454975991828> Loading poll..."
@@ -108,6 +111,7 @@ class Paul(Bot):
 				inter.author.id,
 				message,
 			)
+			logger.debug(f"Poll created: {question}")
 
 	async def close_poll_now(self, poll: Poll, message: Optional[Message] = None):
 		"""Close a poll immediately.
@@ -116,10 +120,12 @@ class Paul(Bot):
 			poll (Poll): The poll to close.
 			message (Optional[Message]): The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
 		"""
+		logger.debug(f"Closing poll {poll.question}...")
 		poll.close()
 		await self.__update_poll_message(poll, message)
 		self.__closed_poll_count += 1
 		await self.__set_presence()
+		logger.debug(f"Poll closed: {poll.question}")
 
 	async def new_poll(
 		self, params: PollCommandParams, author_id: int, message: Message
@@ -141,6 +147,7 @@ class Paul(Bot):
 			author_id (int): The ID of the user who added the option.
 			message (Optional[Message], optional): The message containing the poll. If omitted, it will be fetched asynchronously.
 		"""
+		logger.debug(f"Adding option {label} to poll {poll.question}")
 		await poll.new_option(label, author_id)
 		await self.__update_poll_message(poll, message)
 
@@ -163,7 +170,7 @@ class Paul(Bot):
 			else:
 				self.__closed_poll_count += 1
 			self.add_view(PollView(self, poll))
-		logging.info(f"Finished loading {self.__total_poll_count} polls.")
+		logger.info(f"Finished loading {self.__total_poll_count} polls.")
 
 	async def __poll_close_task(self, poll: Poll, message: Optional[Message] = None):
 		"""Close a poll at a specific time.
