@@ -2,19 +2,32 @@ import asyncio
 import os
 import application
 from presentation.paul import Paul
+from discord_lumberjack.handlers import DiscordChannelHandler
+from discord_lumberjack.message_creators import EmbedMessageCreator
 import logging
-import tracemalloc
+from dotenv import load_dotenv
 
-logging.basicConfig(
-	format="%(asctime)s %(levelname)-8s %(message)s",
-	level=logging.INFO,
-	datefmt="%Y-%m-%d %H:%M:%S",
-	handlers=[
-		logging.FileHandler("ouput.log"),
-		logging.StreamHandler()
-	]
+load_dotenv()
+token = os.environ["BOT_TOKEN"]
+
+logger = logging.getLogger("paul")
+logger.setLevel(logging.DEBUG)
+stderr_handler = logging.StreamHandler()
+stderr_handler.setLevel(logging.INFO)
+logger.addHandler(stderr_handler)
+file_handler = logging.FileHandler("output.log")
+file_handler.setLevel(logging.DEBUG)
+logger.addHandler(file_handler)
+logger.addHandler(
+	DiscordChannelHandler(
+		token, int(os.environ["ERR_CHANNEL"]), logging.ERROR, EmbedMessageCreator()
+	)
 )
-tracemalloc.start()
+logger.addHandler(
+	DiscordChannelHandler(
+		token, int(os.environ["DBG_CHANNEL"]), logging.DEBUG, EmbedMessageCreator()
+	)
+)
 
 
 async def main():
@@ -25,7 +38,7 @@ async def main():
 	bot = Paul(" ")
 
 	# Run Discord bot
-	await bot.start(os.getenv("BOT_TOKEN", ""))
+	await bot.start(token)
 
 
 if __name__ == "__main__":

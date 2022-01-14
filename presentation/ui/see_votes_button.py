@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional, Tuple, TypeVar
+from typing import List
 import disnake
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
@@ -6,7 +6,7 @@ from presentation.embeds.question_results_embed import QuestionResultsEmbed
 from presentation.embeds.see_option_results_embed import SeeOptionResultsEmbed
 from application.poll import Poll
 from .poll_action_button import PollActionButton
-from itertools import zip_longest
+from utils import chunks
 
 
 class SeeVotesButton(PollActionButton):
@@ -33,13 +33,3 @@ class SeeVotesButton(PollActionButton):
 			row=4,
 			no_permission_message="You do not have permission to view the votes.",
 		)
-
-
-T = TypeVar("T")
-
-
-def chunks(
-	iterable: Iterable[T], chunk_size: int, fill_value: Optional[T] = None
-) -> Iterable[Tuple[Optional[T]]]:
-	args = [iter(iterable)] * chunk_size
-	return zip_longest(*args, fillvalue=fill_value)
