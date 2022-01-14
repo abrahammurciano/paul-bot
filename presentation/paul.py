@@ -120,12 +120,11 @@ class Paul(Bot):
 			poll (Poll): The poll to close.
 			message (Optional[Message]): The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
 		"""
-		logger.debug(f"Closing poll {poll.question}...")
+		logger.debug(f"Closing poll {poll.question}.")
 		poll.close()
 		await self.__update_poll_message(poll, message)
 		self.__closed_poll_count += 1
 		await self.__set_presence()
-		logger.debug(f"Poll closed: {poll.question}")
 
 	async def new_poll(
 		self, params: PollCommandParams, author_id: int, message: Message
