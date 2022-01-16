@@ -9,6 +9,7 @@ from disnake.ext.commands.params import Param
 from disnake.interactions.application_command import GuildCommandInteraction
 from disnake.interactions.message import MessageInteraction
 from disnake.message import Message
+from disnake.guild import Guild
 from application import Poll
 from application.option import Option
 from presentation.command_params import PollCommandParams
@@ -46,6 +47,11 @@ class Paul(Bot):
 				await self.__load_polls()
 				await self.__set_presence()
 				self.__on_ready_triggered = True
+
+		@self.event
+		async def on_guild_join(guild: Guild):
+			logger.info(f"Joined guild {guild.name}.")
+			await self.__set_presence()
 
 		@self.event
 		async def on_slash_command_error(inter: Interaction, error: Exception):
