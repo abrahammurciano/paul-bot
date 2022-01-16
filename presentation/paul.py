@@ -16,11 +16,16 @@ from presentation.ui.poll_view import PollView
 from presentation.embeds.poll_closed_embed import PollClosedEmbed
 from presentation.embeds.poll_embed import PollEmbed
 from presentation.embeds.poll_embed_base import PollEmbedBase
-from presentation.converters import parse_expires, parse_mentions, parse_options
+from presentation.converters import (
+	length_bound_str,
+	parse_expires,
+	parse_mentions,
+	parse_options,
+)
 from datetime import datetime
 from application import Mention
 from disnake.interactions.base import Interaction
-from presentation.errors import handle_error
+from presentation.errors import FriendlyError, handle_error
 import pytz
 
 logger = logging.getLogger(f"paul.{__name__}")
@@ -49,7 +54,9 @@ class Paul(Bot):
 		@self.slash_command(desc="Create a poll")
 		async def poll(
 			inter: GuildCommandInteraction,
-			question: str = Param(desc="Ask a question..."),
+			question: str = Param(
+				desc="Ask a question...", converter=length_bound_str(254)
+			),
 			options: Iterable[str] = Param(
 				desc=(
 					"Separate each option with a pipe (|). By default the options are"
@@ -91,7 +98,7 @@ class Paul(Bot):
 				converter=parse_mentions,
 			),
 		):
-			logger.debug(f"{inter.author.name} created a poll {question}.")
+			logger.debug(f"{inter.author.name} wants to create a poll {question}.")
 			await inter.response.send_message(
 				embed=PollEmbedBase(
 					question, "<a:loading:904120454975991828> Loading poll..."
@@ -111,6 +118,7 @@ class Paul(Bot):
 				inter.author.id,
 				message,
 			)
+			logger.debug(f"{inter.author.name} successfully created a poll {question}.")
 
 	async def close_poll_now(self, poll: Poll, message: Optional[Message] = None):
 		"""Close a poll immediately.

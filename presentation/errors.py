@@ -14,7 +14,7 @@ async def handle_error(error: Exception):
 		logger.debug(f"Handling FriendlyError: {error.message}")
 		await error.send()
 	else:
-		logger.exception("Something went wrong...")
+		logger.exception(str(error) if error else "Something went wrong...")
 
 
 class FriendlyError(Exception):

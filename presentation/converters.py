@@ -16,6 +16,12 @@ def parse_options(sep: str = "|") -> Callable[[Interaction, str], List[str]]:
 				f'Too many options. Maximum is 23.\nOptions: "{result}"',
 				inter.response,
 			)
+		for option in result:
+			if len(option) > 254:
+				raise FriendlyError(
+					f'Option "{option}" is too long. Maximum is 254 characters.',
+					inter.response,
+				)
 		return result
 
 	return converter
@@ -57,3 +63,17 @@ def parse_mentions(inter: Interaction, string: str) -> List[Mention]:
 		else string
 	)
 	return [Mention(tup[0], int(tup[1])) for tup in MENTION_REGEX.findall(string)]
+
+
+def length_bound_str(max: int, min: int = 0):
+	def converter(inter: Interaction, string: str) -> str:
+		if len(string) > max or len(string) < min:
+			raise FriendlyError(
+				f"Expected a string of length between {min} and {max}"
+				f' characters.\nInstead got "{string}" which is {len(string)}'
+				" characters.",
+				inter.response,
+			)
+		return string
+
+	return converter

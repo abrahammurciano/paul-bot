@@ -31,6 +31,8 @@ logger.addHandler(
 
 
 async def main():
+	logger.info("Starting Paul...")
+
 	# Connect to the database
 	await application.init()
 
