@@ -2,6 +2,7 @@ import asyncio
 from typing import Optional
 from disnake import Client, Message
 from disnake.interactions.message import MessageInteraction
+from disnake.errors import NotFound
 
 
 async def get_text_input(
@@ -17,5 +18,8 @@ async def get_text_input(
 		)
 		return message
 	except asyncio.TimeoutError:
-		await prompt_msg.edit(content=f"~~{prompt}~~ *(Timed out)*")
+		try:
+			await prompt_msg.edit(content=f"~~{prompt}~~ *(Timed out)*")
+		except NotFound:
+			pass
 		return None
