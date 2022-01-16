@@ -144,7 +144,9 @@ class Option:
 		"""
 		options = [
 			Option(None, label, (), poll, index, author_id)
-			for index, label in enumerate(labels, start=len(poll.options))
+			for index, label in enumerate(
+				labels, start=max(option.index for option in poll.options) + 1
+			)
 		]
 		option_ids = await data.cruds.options_crud.add(options)
 		for option in options:

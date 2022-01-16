@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
@@ -8,6 +9,8 @@ from presentation.ui.util import get_text_input
 
 if TYPE_CHECKING:
 	from paul import Paul
+
+logger = logging.getLogger(f"paul.{__name__}")
 
 
 class AddOptionButton(PollActionButton):
@@ -20,6 +23,10 @@ class AddOptionButton(PollActionButton):
 		"""
 
 		async def add_option(inter: MessageInteraction):
+			logger.debug(
+				f"{inter.author.display_name} wants to add an option to poll"
+				f" {poll.question}."
+			)
 			if reply := await get_text_input(
 				f"**What option do you want to add?** *(You have one minute to reply)*",
 				inter,

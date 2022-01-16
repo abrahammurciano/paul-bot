@@ -145,9 +145,9 @@ class Paul(Bot):
 			author_id (int): The ID of the user who added the option.
 			message (Optional[Message], optional): The message containing the poll. If omitted, it will be fetched asynchronously.
 		"""
-		logger.debug(f"Adding option {label} to poll {poll.question}")
 		await poll.new_option(label, author_id)
 		await self.__update_poll_message(poll, message)
+		logger.debug(f"Added option {label} to poll {poll.question}")
 
 	async def toggle_vote(self, option: Option, voter_id: int):
 		"""Toggle a voter's vote for an option, removing the voter's vote from another option if necessary.

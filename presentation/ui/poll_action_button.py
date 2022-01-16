@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from typing import Callable, Coroutine, Iterable, Optional, Union
 import disnake
 from disnake.emoji import Emoji
