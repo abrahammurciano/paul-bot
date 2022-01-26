@@ -17,8 +17,6 @@ class PollsCrud(Crud):
 	async def add(self, poll: "Poll") -> int:
 		"""Add a poll to the database.
 
-		During this operation, the poll's ID is set to the database's auto-incremented ID.
-
 		Args:
 			pool (asyncpg.Pool): The database connection pool.
 			poll (Poll): The poll to add to the database.
@@ -45,6 +43,14 @@ class PollsCrud(Crud):
 		)
 		await self.__insert_permissions("allowed_voters", poll.allowed_voters, poll_id)
 		return poll_id
+
+	async def delete(self, poll_id: int):
+		"""Delete a poll from the database.
+
+		Args:
+			poll_id (int): The ID of the poll to delete.
+		"""
+		await sql.delete(self.pool, "polls", id=poll_id)
 
 	async def __insert_permissions(
 		self, table: str, mentions: Iterable[Mention], poll_id: int

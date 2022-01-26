@@ -4,9 +4,13 @@ from disnake import Message
 import pytz
 from application.mention import Mention
 from presentation.command_params import PollCommandParams
+from presentation.errors import FriendlyError
 import data
 from .option import Option
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(f"paul.{__name__}")
 
 
 class Poll:
@@ -139,6 +143,13 @@ class Poll:
 			self.__expires = now
 		asyncio.create_task(data.cruds.polls_crud.update_expiry(self, now, closed=True))
 
+	def delete(self):
+		"""Delete the poll from the database.
+
+		This function will delete the poll from the database and remove the message from the channel.
+		"""
+		asyncio.create_task(data.cruds.polls_crud.delete(self.poll_id))
+
 	def remove_votes_from(self, voter_id: int):
 		"""Remove all votes from the given user on this poll.
 
@@ -159,6 +170,19 @@ class Poll:
 	async def create_poll(
 		cls, params: PollCommandParams, author_id: int, message: Message,
 	) -> "Poll":
+		"""Create a new poll.
+
+		Args:
+			params (PollCommandParams): The parameters of the poll command that the user triggered.
+			author_id (int): The ID of the user who wants to create the poll.
+			message (Message): The message that the poll should be put into.
+
+		Returns:
+			Poll: The created poll.
+
+		Raises:
+			RuntimeError: If the poll's options could not be added.
+		"""
 		poll = Poll(
 			None,
 			params.question,
@@ -175,6 +199,13 @@ class Poll:
 		poll.__poll_id = await data.cruds.polls_crud.add(poll)
 		for option in await Option.create_options(params.options, poll):
 			poll.add_option(option)
+		if not poll.options:
+			logger.error(
+				f"Could not add options when creating poll {poll.poll_id}:"
+				f" {poll.question}. Given options: {params.options}"
+			)
+			poll.delete()
+			raise RuntimeError("Could not options to the poll.")
 		return poll
 
 	@classmethod

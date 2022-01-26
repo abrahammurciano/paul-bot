@@ -30,7 +30,11 @@ class FriendlyError(Exception):
 
 	async def send(self):
 		if not self.response.is_done():
-			await self.response.send_message(self.message, ephemeral=True)
+			await self.response.send_message(
+				f"{self.message}\n\n*If you need help, join my server and ask!"
+				" <https://discord.com/invite/mzhSRnnY78>.*",
+				ephemeral=True,
+			)
 
 
 class ErrorHandlingView(disnake.ui.View):

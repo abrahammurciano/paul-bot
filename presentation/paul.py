@@ -142,11 +142,24 @@ class Paul(Bot):
 	async def new_poll(
 		self, params: PollCommandParams, author_id: int, message: Message
 	):
-		poll = await Poll.create_poll(params, author_id, message)
-		self.__total_poll_count += 1
-		await self.__update_poll_message(poll, message)
-		await self.__set_presence()
-		asyncio.create_task(self.__poll_close_task(poll))
+		try:
+			poll = await Poll.create_poll(params, author_id, message)
+			self.__total_poll_count += 1
+			await self.__update_poll_message(poll, message)
+			await self.__set_presence()
+			asyncio.create_task(self.__poll_close_task(poll))
+		except RuntimeError as e:
+			await message.edit(
+				embed=PollEmbedBase(
+					"Something went wrong...",
+					f'"{params.question}" could not be created. Please try'
+					f" again.\n\n**Reason:** {e}\n\nIf the problem persists,"
+					" please open an issue on"
+					" [GitHub](https://github.com/abrahammurciano/paul-bot) or ask for"
+					" help on the [Discord"
+					" Server](https://discord.com/invite/mzhSRnnY78).",
+				)
+			)
 
 	async def add_poll_option(
 		self, poll: Poll, label: str, author_id: int, message: Optional[Message] = None
