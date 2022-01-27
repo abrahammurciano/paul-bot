@@ -6,6 +6,9 @@ from datetime import datetime
 import dateparser
 import re
 from application.mention import Mention
+import logging
+
+logger = logging.getLogger(f"paul.{__name__}")
 
 
 def parse_options(sep: str = "|") -> Callable[[Interaction, str], List[str]]:
@@ -22,6 +25,12 @@ def parse_options(sep: str = "|") -> Callable[[Interaction, str], List[str]]:
 					f'Option "{option}" is too long. Maximum is 254 characters.',
 					inter.response,
 				)
+		if not result:
+			logger.warning(
+				f'Unable to parse any options out of the input string "{options}".'
+				"Using default Yes/No options instead."
+			)
+			return ("Yes", "No")
 		return result
 
 	return converter
