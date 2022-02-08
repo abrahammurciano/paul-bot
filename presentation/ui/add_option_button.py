@@ -1,7 +1,8 @@
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Set
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
+from disnake.errors import Forbidden
 from application.mention import mentions_str
 from application.poll import Poll
 from presentation.ui.poll_action_button import PollActionButton
@@ -22,7 +23,13 @@ class AddOptionButton(PollActionButton):
 			poll (Poll): The poll to add options to when this button gets clicked.
 		"""
 
+		users_using_button: Set[int] = set()
+
 		async def add_option(inter: MessageInteraction):
+			if inter.author.id in users_using_button:
+				return
+			users_using_button.add(inter.author.id)
+
 			logger.debug(
 				f"{inter.author.display_name} wants to add an option to poll"
 				f" {poll.question}."
@@ -33,10 +40,14 @@ class AddOptionButton(PollActionButton):
 				bot,
 				60.0,
 			):
+				users_using_button.discard(inter.author.id)
 				await bot.add_poll_option(
 					poll, reply.content, inter.author.id, inter.message
 				)
-				await reply.add_reaction("✅")
+				try:
+					await reply.add_reaction("✅")
+				except Forbidden:
+					pass
 
 		super().__init__(
 			action=add_option,
