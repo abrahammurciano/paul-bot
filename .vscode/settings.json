@@ -1,5 +1,5 @@
 {
-	"python.pythonPath": ".venv/bin/python",
+	"python.defaultInterpreterPath": ".venv/bin/python",
 	"spellright.language": [
 		"en_GB"
 	],
