@@ -117,3 +117,32 @@ Use this parameter to restrict who may vote to a set of users and roles. By defa
 ### Closing the poll
 
 You can use the big red button to close the poll manually without waiting for it to expire. Once you do this, there's no turning back. Only the poll creator can do this.
+
+
+## Development
+
+Requirements: Python, MySQL
+
+### Setup:
+
+- Create postgres database
+- Copy .env.example to .env and fill in with your own keys and postgres database url
+- Install python version from .python-version
+- Create a python venv
+  - `python -m venv venv`
+
+### Run server
+- Activate venv
+  - `source bin/activate`
+- Run process
+  - `python main.py`
+
+### Required Permissions of Discord API Key
+
+- application.commands
+- bot
+  - Send Messages
+  - Read Message History
+  - Add Reactions
+  - Use Slash Commands
+
