@@ -1,6 +1,6 @@
 ALTER TYPE option ADD ATTRIBUTE archived timestamp;
 
-ALTER TABLE options ADD COLUMN archived timestamp DEFAULT NULL
+ALTER TABLE options ADD COLUMN archived timestamp DEFAULT NULL;
 
 DROP VIEW options_extended_view CASCADE;
 
