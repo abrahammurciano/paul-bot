@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Iterable, List, Optional, Set, Tuple, TYPE_CHECKING
 import asyncpg
+from datetime import datetime
 from application.mention import Mention
 from application.option import Option
 from data.cruds import Crud
@@ -135,7 +136,7 @@ class PollsCrud(Crud):
 	def __parse_options(
 		self,
 		poll: "Poll",
-		options: List[Tuple[int, str, Optional[int], Optional[Iterable[int]], int]],
+		options: List[Tuple[int, str, Optional[int], Optional[Iterable[int]], int, Optional[datetime]]],
 	) -> List[Option]:
 		"""Construct a list of options for a poll given a list of tuples returned from the database.
 
@@ -156,6 +157,7 @@ class PollsCrud(Crud):
 				poll=poll,
 				index=option[4],
 				author_id=option[2],
+				archived=option[5]
 			)
 			for option in options
 		]

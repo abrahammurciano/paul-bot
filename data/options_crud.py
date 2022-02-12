@@ -1,5 +1,7 @@
 from typing import Iterable, Mapping
 import asyncpg
+from datetime import datetime
+import pytz
 from application.option import Option
 from data import sql
 from data.cruds import Crud
@@ -31,3 +33,20 @@ class OptionsCrud(Crud):
 			returning="id, index",
 		)
 		return {r["index"]: r["id"] for r in records}
+
+	async def archive(self, id: int):
+		"""Archive an option in the database.
+
+		Args:
+			id (int): The ID of the option to archive.
+		"""
+		archived_datetime = datetime.now(pytz.utc)
+
+		record = await sql.update(
+			self.pool,
+			"options",
+			set={"archived": archived_datetime},
+			where={"id": id},
+		)
+
+		return record
