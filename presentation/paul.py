@@ -176,6 +176,20 @@ class Paul(Bot):
 		await self.__update_poll_message(poll, message)
 		logger.debug(f"Added option {label} to poll {poll.question}")
 
+	async def archive_poll_option(
+		self, poll: Poll, index: int, message: Optional[Message] = None
+	):
+		"""Archive an option, removing it from the given poll.
+
+		Args:
+			poll (Poll): The poll to archive the option in.
+			index (int): The index of the option.
+			message (Optional[Message], optional): The message containing the poll. If omitted, it will be fetched asynchronously.
+		"""
+		await poll.archive_option(index)
+		await self.__update_poll_message(poll, message)
+		logger.debug(f"Archived option {index}, removing it from poll {poll.question}")
+
 	async def toggle_vote(self, option: Option, voter_id: int):
 		"""Toggle a voter's vote for an option, removing the voter's vote from another option if necessary.
 
