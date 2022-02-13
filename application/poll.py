@@ -175,7 +175,8 @@ class Poll:
 
 	async def archive_option(self, option_index: int):
 		"""Archive option at index, removing from the poll."""
-		await self.__options[option_index].archive()
+		options_active = tuple(filter(lambda x: x.archived is None, self.__options))
+		await options_active[option_index-1].archive()
 
 	@classmethod
 	async def create_poll(

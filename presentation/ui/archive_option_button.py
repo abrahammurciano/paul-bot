@@ -35,7 +35,7 @@ class ArchiveOptionButton(PollActionButton):
 			):
 				try:
 					await bot.archive_poll_option(
-						poll, int(reply.content)-1, inter.message
+						poll, int(reply.content), inter.message
 					)
 					await reply.add_reaction("✅")
 				except ValueError as e:
