@@ -1,6 +1,6 @@
-ALTER TYPE option ADD ATTRIBUTE archived timestamp;
+ALTER TYPE option ADD ATTRIBUTE archived timestamptz;
 
-ALTER TABLE options ADD COLUMN archived timestamp DEFAULT NULL;
+ALTER TABLE options ADD COLUMN archived timestamptz DEFAULT NULL;
 
 DROP VIEW options_extended_view CASCADE;
 
@@ -12,7 +12,7 @@ SELECT
     NULL::bigint AS author,
     NULL::bigint[] AS votes,
     NULL::integer AS index,
-    NULL::timestamp AS archived;
+    NULL::timestamptz AS archived;
 
 CREATE VIEW grouped_options AS
  SELECT polls.id,
@@ -29,7 +29,7 @@ CREATE VIEW grouped_options AS
      LEFT JOIN options_extended_view ON ((polls.id = options_extended_view.poll_id)))
   GROUP BY polls.id;
 
-CREATE VIEW polls_extended_view AS
+CREATE VIEW public.polls_extended_view AS
  SELECT polls.id,
     polls.question,
     polls.author,
