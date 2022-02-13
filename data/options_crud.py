@@ -34,14 +34,12 @@ class OptionsCrud(Crud):
 		)
 		return {r["index"]: r["id"] for r in records}
 
-	async def archive(self, id: int):
+	async def archive(self, id: int, archived_datetime: datetime):
 		"""Archive an option in the database.
 
 		Args:
 			id (int): The ID of the option to archive.
 		"""
-		archived_datetime = datetime.now(pytz.utc)
-
 		record = await sql.update(
 			self.pool,
 			"options",

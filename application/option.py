@@ -2,6 +2,7 @@ import asyncio
 from typing import Iterable, List, Optional, Set, TYPE_CHECKING
 import data
 from datetime import datetime
+import pytz
 
 if TYPE_CHECKING:
 	from application.poll import Poll
@@ -69,7 +70,7 @@ class Option:
 		return len(self.__votes)
 
 	@property
-	def archived(self) -> str:
+	def archived(self) -> datetime:
 		"""The archived date of the option, or null if not archived"""
 		return self.__archived
 
@@ -124,8 +125,9 @@ class Option:
 		"""Archive this option.
 		"""
 		if self.__archived is None:
-			record = await data.cruds.options_crud.archive(self.option_id)
-			self.__archived = record['archived']
+			archived_datetime = datetime.now(tz=pytz.UTC)
+			await data.cruds.options_crud.archive(self.option_id, archived_datetime)
+			self.__archived = archived_datetime
 
 	@classmethod
 	async def create_option(
@@ -158,7 +160,7 @@ class Option:
 			List[Option]: The new Option objects.
 		"""
 		options = [
-			Option(None, label, (), poll, index, author_id, False)
+			Option(None, label, (), poll, index, author_id, None)
 			for index, label in enumerate(
 				labels,
 				start=max((option.index for option in poll.options), default=-1) + 1,
