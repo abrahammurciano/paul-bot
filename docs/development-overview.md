@@ -1,6 +1,6 @@
 # Development Overview
 
-Requirements: Python, MySQL
+Requirements: Python, Postgresql
 
 ### Setup:
 
