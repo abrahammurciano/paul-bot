@@ -70,7 +70,7 @@ class Option:
 		return len(self.__votes)
 
 	@property
-	def archived(self) -> datetime:
+	def archived(self) -> Optional[datetime]:
 		"""The archived date of the option, or null if not archived"""
 		return self.__archived
 
