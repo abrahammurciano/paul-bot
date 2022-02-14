@@ -71,7 +71,7 @@ class Option:
 
 	@property
 	def archived(self) -> Optional[datetime]:
-		"""The archived date of the option, or null if not archived"""
+		"""The archived date of the option, or None if not archived"""
 		return self.__archived
 
 	def remove_vote(self, voter_id: int):
