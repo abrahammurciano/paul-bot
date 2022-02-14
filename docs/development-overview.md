@@ -12,7 +12,7 @@ Requirements: Python, Postgresql
 
 ### Run server
 - Activate venv
-  - `source bin/activate`
+  - `source venv/bin/activate`
 - Install Requirements
   - `pip install -r reqiurements.txt`
 - Run process
