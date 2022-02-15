@@ -41,7 +41,6 @@ class PollView(ErrorHandlingView):
 	def __add_archive_option_button(self):
 		if (
 			not self.__poll.is_expired
-			and self.__poll.allowed_editors
 			and len(self.__poll.options) > 0
 		):
 			self.add_item(ArchiveOptionButton(self.__bot, self.__poll))

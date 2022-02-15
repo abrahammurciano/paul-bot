@@ -6,6 +6,7 @@ from application.mention import mentions_str
 from application.poll import Poll
 from presentation.ui.poll_action_button import PollActionButton
 from presentation.ui.util import get_text_input
+from application.mention import Mention
 
 if TYPE_CHECKING:
 	from paul import Paul
@@ -41,16 +42,17 @@ class ArchiveOptionButton(PollActionButton):
 				except ValueError:
 					await reply.add_reaction("❗")
 
+		author_mention = Mention("@", poll.author_id)
 		super().__init__(
 			action=archive_option,
-			allowed_clickers=poll.allowed_editors,
+			allowed_clickers=(author_mention,),
 			style=ButtonStyle.red,
 			label="Archive Option",
 			custom_id=f"{poll.poll_id} archive_option",
 			emoji="📝",
 			row=4,
 			no_permission_message=(
-				"You do not have permission to archive options in this poll.\nThe allowed"
-				f" editors are: {mentions_str(poll.allowed_editors)}"
+				"You do not have permission to archive options in this poll.\n Only {author_mention}"
+				" may do that."
 			),
 		)
