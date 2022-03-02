@@ -1,6 +1,8 @@
 import asyncio
 from typing import Iterable, List, Optional, Set, TYPE_CHECKING
 import data
+from datetime import datetime
+import pytz
 
 if TYPE_CHECKING:
 	from application.poll import Poll
@@ -17,6 +19,7 @@ class Option:
 		poll: "Poll",
 		index: int,
 		author_id: Optional[int],
+		archived: Optional[datetime]=None
 	):
 		self.__option_id = option_id
 		self.__label = label
@@ -24,6 +27,7 @@ class Option:
 		self.__poll = poll
 		self.__index = index
 		self.__author_id = author_id
+		self.__archived = archived
 
 	@property
 	def option_id(self) -> int:
@@ -64,6 +68,11 @@ class Option:
 	def vote_count(self) -> int:
 		"""Get the number of votes for this option."""
 		return len(self.__votes)
+
+	@property
+	def archived(self) -> Optional[datetime]:
+		"""The archived date of the option, or None if not archived"""
+		return self.__archived
 
 	def remove_vote(self, voter_id: int):
 		"""Remove a vote from the given user on this option. If no such vote exists, nothing happens.
@@ -112,6 +121,14 @@ class Option:
 		else:
 			self.add_vote(voter_id)
 
+	async def archive(self):
+		"""Archive this option.
+		"""
+		if self.__archived is None:
+			archived_datetime = datetime.now(tz=pytz.utc)
+			await data.cruds.options_crud.archive(self.option_id, archived_datetime)
+			self.__archived = archived_datetime
+
 	@classmethod
 	async def create_option(
 		cls, label: str, poll: "Poll", author_id: Optional[int] = None
@@ -143,7 +160,7 @@ class Option:
 			List[Option]: The new Option objects.
 		"""
 		options = [
-			Option(None, label, (), poll, index, author_id)
+			Option(None, label, (), poll, index, author_id, None)
 			for index, label in enumerate(
 				labels,
 				start=max((option.index for option in poll.options), default=-1) + 1,

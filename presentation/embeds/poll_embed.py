@@ -29,6 +29,7 @@ class PollEmbed(PollEmbedBase):
 		self.__vote_bar_background = "⬛"
 		self.__vote_bar_length = 12
 		self.add_options()
+		self.add_archived_options()
 		self.add_details()
 
 	@property
@@ -68,6 +69,16 @@ class PollEmbed(PollEmbedBase):
 				),
 				inline=False,
 			)
+
+	def add_archived_options(self):
+		if len(self.poll.archived_options) > 0:
+			self.add_field(name="---", value="**Archived**")
+			for option in sorted(self.poll.archived_options, key=lambda x: x.archived):
+				self.add_field(
+					name=f"~~{option.label}~~",
+					value=f"*Archived {option.archived.strftime('%m/%d/%Y')}*",
+					inline=False,
+				)
 
 	def vote_bar(
 		self,

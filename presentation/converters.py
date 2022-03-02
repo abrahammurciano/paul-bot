@@ -14,9 +14,9 @@ logger = logging.getLogger(f"paul.{__name__}")
 def parse_options(sep: str = "|") -> Callable[[Interaction, str], List[str]]:
 	def converter(inter: Interaction, options: str) -> List[str]:
 		result = [option.strip() for option in options.split(sep) if option]
-		if len(result) > 23:
+		if len(result) > 22:
 			raise FriendlyError(
-				f'Too many options. Maximum is 23.\nOptions: "{result}"',
+				f'Too many options. Maximum is 22.\nOptions: "{result}"',
 				inter.response,
 			)
 		for option in result:

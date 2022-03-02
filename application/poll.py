@@ -39,7 +39,7 @@ class Poll:
 		self.__message_id = message_id
 		self.__channel_id = channel_id
 		self.__closed = closed
-		self.__options: List[Option] = []
+		self.__options = []
 
 	@property
 	def poll_id(self) -> int:
@@ -59,7 +59,14 @@ class Poll:
 	@property
 	def options(self) -> Tuple[Option, ...]:
 		"""The options of the poll that users can choose from."""
-		return tuple(self.__options)
+		options_active = tuple(filter(lambda x: x.archived is None, self.__options))
+		return options_active
+
+	@property
+	def archived_options(self) -> Tuple[Option, ...]:
+		"""The options of the poll that users can choose from."""
+		options_archived = tuple(filter(lambda x: x.archived is not None, self.__options))
+		return options_archived
 
 	@property
 	def expires(self) -> Optional[datetime]:
@@ -165,6 +172,11 @@ class Poll:
 	def add_option(self, option: Option):
 		"""Add option objects to the poll."""
 		self.__options.append(option)
+
+	async def archive_option(self, option_index: int):
+		"""Archive option at index, removing from the poll."""
+		options_active = tuple(filter(lambda x: x.archived is None, self.__options))
+		await options_active[option_index-1].archive()
 
 	@classmethod
 	async def create_poll(

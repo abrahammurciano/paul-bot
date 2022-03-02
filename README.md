@@ -117,3 +117,7 @@ Use this parameter to restrict who may vote to a set of users and roles. By defa
 ### Closing the poll
 
 You can use the big red button to close the poll manually without waiting for it to expire. Once you do this, there's no turning back. Only the poll creator can do this.
+
+
+## Development
+See docs/development-overview.md for [development documentation](docs/development-overview.md)

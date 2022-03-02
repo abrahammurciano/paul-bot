@@ -26,7 +26,6 @@ class VoteButton(PollActionButton):
 			allowed_clickers=option.poll.allowed_voters,
 			style=ButtonStyle.blurple,
 			label=(
-				f"{str(option.index + 1)}."
 				f" {option.label[:30]}{'...' if len(option.label) > 30 else ''}"
 			),
 			custom_id=str(option.option_id),
