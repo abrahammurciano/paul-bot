@@ -125,7 +125,7 @@ class Option:
 		"""Archive this option.
 		"""
 		if self.__archived is None:
-			archived_datetime = datetime.now(tz=pytz.UTC)
+			archived_datetime = datetime.now(tz=pytz.utc)
 			await data.cruds.options_crud.archive(self.option_id, archived_datetime)
 			self.__archived = archived_datetime
 
