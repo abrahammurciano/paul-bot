@@ -105,7 +105,8 @@ class Paul(Bot):
 			),
 		):
 			logger.debug(f"{inter.author.name} wants to create a poll {question}.")
-			await inter.response.send_message(
+			await inter.response.defer()
+			await inter.followup.send(
 				embed=PollEmbedBase(
 					question, "<a:loading:904120454975991828> Loading poll..."
 				)
