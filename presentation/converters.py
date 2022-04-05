@@ -1,5 +1,5 @@
 from typing import Callable, List
-from disnake.interactions.base import Interaction
+from disnake.interactions import ApplicationCommandInteraction as Interaction
 import pytz
 from presentation.errors import FriendlyError
 from datetime import datetime
