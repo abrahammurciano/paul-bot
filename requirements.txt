@@ -1,6 +1,6 @@
 disnake==2.4.0
 asyncpg==0.24.0
-dateparser==1.1.0
+dateparser==1.1.1
 types-pytz==2021.3.0
 discord-lumberjack==1.0.3
 python-dotenv==0.19.2
