@@ -1,16 +1,11 @@
 {
-	// Use IntelliSense to learn about possible attributes.
-	// Hover to view descriptions of existing attributes.
-	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Python: Run Paul",
+			"name": "Python: Module",
 			"type": "python",
 			"request": "launch",
-			"program": "main.py",
-			"console": "integratedTerminal",
-			"justMyCode": false
+			"module": "paul_bot.main",
+			"justMyCode": true
 		}
 	]
 }
