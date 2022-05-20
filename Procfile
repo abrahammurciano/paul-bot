@@ -1,1 +1,1 @@
-worker: python main.py
+worker: python -m paul_bot.main

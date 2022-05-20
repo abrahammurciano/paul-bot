@@ -5,13 +5,13 @@ description = ""
 authors = ["Abraham Murciano <abrahammurciano@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "3.10.4"
 disnake = "^2.4"
 asyncpg = "^0.24"
 dateparser = "^1.1"
 discord-lumberjack = "^1.0"
 python-dotenv = "^0.19"
-pytz = "*"
+pytz = "^2022.1"
 
 [tool.poetry.dev-dependencies]
 types-pytz = "^2021.3"
