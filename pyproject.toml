@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "paul-bot"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Abraham Murciano <abrahammurciano@gmail.com>"]
 
@@ -12,7 +12,6 @@ dateparser = "^1.1"
 discord-lumberjack = "^1.0"
 python-dotenv = "^0.19"
 pytz = "*"
-logdecorator = "^2.4"
 
 [tool.poetry.dev-dependencies]
 types-pytz = "^2021.3"

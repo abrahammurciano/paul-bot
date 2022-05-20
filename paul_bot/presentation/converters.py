@@ -17,13 +17,13 @@ def parse_options(sep: str = "|") -> Callable[[Interaction, str], List[str]]:
 		if len(result) > 23:
 			raise FriendlyError(
 				f'Too many options. Maximum is 23.\nOptions: "{result}"',
-				inter.response,
+				inter,
 			)
 		for option in result:
 			if len(option) > 254:
 				raise FriendlyError(
 					f'Option "{option}" is too long. Maximum is 254 characters.',
-					inter.response,
+					inter,
 				)
 		if not result:
 			logger.warning(
@@ -53,7 +53,7 @@ def parse_expires(inter: Interaction, expires: str) -> datetime:
 	)
 	if result is None:
 		raise FriendlyError(
-			f'Could not parse "{expires}" as a date/time.', inter.response
+			f'Could not parse "{expires}" as a date/time.', inter
 		)
 	return (
 		result.replace(tzinfo=pytz.utc)
@@ -81,7 +81,7 @@ def length_bound_str(max: int, min: int = 0):
 				f"Expected a string of length between {min} and {max}"
 				f' characters.\nInstead got "{string}" which is {len(string)}'
 				" characters.",
-				inter.response,
+				inter,
 			)
 		return string
 

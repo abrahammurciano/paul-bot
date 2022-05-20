@@ -1,8 +1,9 @@
 import logging
 from typing import Optional
+from urllib import response
 import disnake
-from disnake.interactions.base import InteractionResponse
-from disnake.interactions.message import MessageInteraction
+from disnake.interactions import ApplicationCommandInteraction
+from disnake.interactions import MessageInteraction, ModalInteraction
 from disnake.ui.item import Item
 
 logger = logging.getLogger(__name__)
@@ -21,27 +22,30 @@ class FriendlyError(Exception):
 	def __init__(
 		self,
 		message: str,
-		response: InteractionResponse,
+		inter: ApplicationCommandInteraction,
 		inner: Optional[Exception] = None,
 	):
 		super().__init__(message, inner)
 		self.message = message
-		self.response = response
+		self.inter = inter
 
 	async def send(self):
-		if not self.response.is_done():
-			await self.response.send_message(
-				f"{self.message}\n\n*If you need help, join my server and ask!"
-				" <https://discord.com/invite/mzhSRnnY78>.*",
-				ephemeral=True,
-			)
+		send_args = {
+			"content": f"{self.message}\n\n*If you need help, join my server and ask! <https://discord.com/invite/mzhSRnnY78>.*",
+			"ephemeral": True,
+		}
+		if not self.inter.response.is_done():
+			await self.inter.response.send_message(**send_args)
+		else:
+			self.inter.followup.send(**send_args)
 
 
 class ErrorHandlingView(disnake.ui.View):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-
 	async def on_error(
 		self, error: Exception, item: Item, interaction: MessageInteraction
 	) -> None:
+		await handle_error(error)
+
+class ErrorHandlingModal(disnake.ui.Modal):
+	async def on_error(self, error: Exception, interaction: ModalInteraction) -> None:
 		await handle_error(error)
