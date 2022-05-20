@@ -20,6 +20,7 @@ class VoteButton(PollActionButton):
 
 		async def vote(inter: MessageInteraction):
 			await bot.toggle_vote(option, inter.author.id)
+			await inter.response.defer()
 
 		super().__init__(
 			action=vote,

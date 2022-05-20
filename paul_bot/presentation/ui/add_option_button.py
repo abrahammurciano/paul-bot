@@ -1,12 +1,9 @@
 import logging
-from typing import TYPE_CHECKING, Set
+from typing import TYPE_CHECKING
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
-from disnake.ui import TextInput
-
-from paul_bot.presentation.ui.add_option_modal import AddOptionModal
+from .add_option_modal import AddOptionModal
 from .poll_action_button import PollActionButton
-from .util import get_text_input
 from ...application.mention import mentions_str
 from ...application.poll import Poll
 

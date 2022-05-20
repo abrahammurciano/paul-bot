@@ -1,9 +1,7 @@
 import logging
 from typing import Optional
-from urllib import response
 import disnake
-from disnake.interactions import ApplicationCommandInteraction
-from disnake.interactions import MessageInteraction, ModalInteraction
+from disnake.interactions import Interaction, ModalInteraction
 from disnake.ui.item import Item
 
 logger = logging.getLogger(__name__)
@@ -22,7 +20,7 @@ class FriendlyError(Exception):
 	def __init__(
 		self,
 		message: str,
-		inter: ApplicationCommandInteraction,
+		inter: Interaction,
 		inner: Optional[Exception] = None,
 	):
 		super().__init__(message, inner)
@@ -42,7 +40,7 @@ class FriendlyError(Exception):
 
 class ErrorHandlingView(disnake.ui.View):
 	async def on_error(
-		self, error: Exception, item: Item, interaction: MessageInteraction
+		self, error: Exception, item: Item, interaction: Interaction
 	) -> None:
 		await handle_error(error)
 

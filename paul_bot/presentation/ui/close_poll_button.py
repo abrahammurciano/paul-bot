@@ -11,8 +11,9 @@ if TYPE_CHECKING:
 
 class ClosePollButton(PollActionButton):
 	def __init__(self, bot: "Paul", poll: Poll):
-		async def close_poll(_: MessageInteraction):
+		async def close_poll(inter: MessageInteraction):
 			await bot.close_poll_now(poll)
+			await inter.response.defer()
 
 		author_mention = Mention("@", poll.author_id)
 		super().__init__(

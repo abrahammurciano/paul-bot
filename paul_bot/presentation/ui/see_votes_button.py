@@ -12,6 +12,7 @@ from ...utils import chunks
 class SeeVotesButton(PollActionButton):
 	def __init__(self, poll: Poll):
 		async def show_votes(inter: MessageInteraction):
+			await inter.response.defer(with_message=True, ephemeral=True)
 			embeds: List[disnake.Embed] = [QuestionResultsEmbed(poll)]
 			embeds.extend(
 				SeeOptionResultsEmbed(option, index)
