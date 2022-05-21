@@ -19,34 +19,35 @@ file_handler = logging.FileHandler("output.log")
 file_handler.setLevel(logging.DEBUG)
 logger.addHandler(file_handler)
 if err_channel := os.environ.get("ERR_CHANNEL"):
-	logger.addHandler(
-		DiscordChannelHandler(
-			token, int(err_channel), logging.ERROR, EmbedLongMessageCreator()
-		)
-	)
+    logger.addHandler(
+        DiscordChannelHandler(
+            token, int(err_channel), logging.ERROR, EmbedLongMessageCreator()
+        )
+    )
 if dbg_channel := os.environ.get("DBG_CHANNEL"):
-	logger.addHandler(
-		DiscordChannelHandler(
-			token, int(dbg_channel), logging.DEBUG, EmbedLongMessageCreator()
-		)
-	)
+    logger.addHandler(
+        DiscordChannelHandler(
+            token, int(dbg_channel), logging.DEBUG, EmbedLongMessageCreator()
+        )
+    )
 
 
 async def main():
-	logger.info("Starting Paul...")
+    logger.info("Starting Paul...")
 
-	# Connect to the database
-	await application.init()
+    # Connect to the database
+    await application.init()
 
-	# empty space effectively disables prefix since discord strips trailing spaces
-	bot = Paul()
+    # empty space effectively disables prefix since discord strips trailing spaces
+    bot = Paul()
 
-	# Run Discord bot
-	await bot.start(token)
+    # Run Discord bot
+    await bot.start(token)
 
 
 def _main():
-	asyncio.run(main())
+    asyncio.run(main())
+
 
 if __name__ == "__main__":
-	_main()
+    _main()

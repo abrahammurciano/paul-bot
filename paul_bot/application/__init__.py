@@ -5,4 +5,4 @@ from .. import data
 
 
 async def init():
-	await data.init()
+    await data.init()
