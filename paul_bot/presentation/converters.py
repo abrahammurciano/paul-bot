@@ -20,9 +20,9 @@ def parse_options(sep: str = "|") -> Callable[[Interaction, str], list[str]]:
                 inter,
             )
         for option in result:
-            if len(option) > 254:
+            if len(option) > 253:
                 raise FriendlyError(
-                    f'Option "{option}" is too long. Maximum is 254 characters.',
+                    f'Option "{option}" is too long. Maximum is 253 characters.',
                     inter,
                 )
         if not result:

@@ -22,7 +22,7 @@ class AddOptionModal(ErrorHandlingModal):
                 label="Enter a new option",
                 custom_id=f"{poll.poll_id} add_option_input",
                 placeholder="Maybe",
-                max_length=254,
+                max_length=223,
             ),
         )
 
