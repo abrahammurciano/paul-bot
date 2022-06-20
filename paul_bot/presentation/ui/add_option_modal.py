@@ -22,14 +22,14 @@ class AddOptionModal(ErrorHandlingModal):
                 label="Enter a new option",
                 custom_id=f"{poll.poll_id} add_option_input",
                 placeholder="Maybe",
-                max_length=223,
+                max_length=Poll.MAX_OPTION_LENGTH,
             ),
         )
 
     async def callback(self, interaction: ModalInteraction) -> None:
         new_option = interaction.text_values[f"{self.__poll.poll_id} add_option_input"]
         await self.__bot.add_poll_option(
-            self.__poll, new_option, interaction.author.id, interaction.message
+            self.__poll, new_option, interaction.author.id, interaction
         )
         await interaction.response.send_message(
             f"Successfully added option '{new_option}'", ephemeral=True

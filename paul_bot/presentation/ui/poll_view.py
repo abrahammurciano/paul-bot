@@ -29,7 +29,7 @@ class PollView(ErrorHandlingView):
         if (
             not self.__poll.is_expired
             and self.__poll.allowed_editors
-            and len(self.__poll.options) < 23
+            and len(self.__poll.options) < Poll.MAX_OPTIONS
         ):
             self.add_item(AddOptionButton(self.__bot, self.__poll))
 

@@ -71,7 +71,7 @@ class Option:
         This method does not remove the vote from the database. To remove the vote from the database, use the `delete_vote` method.
 
         Args:
-                voter_id (int): The ID of the user whose vote is to be removed.
+            voter_id: The ID of the user whose vote is to be removed.
         """
         self.__votes.discard(voter_id)
 
@@ -81,7 +81,7 @@ class Option:
         This method deletes the vote from the database. To remove the vote from the option without affecting the database (for example if the vote has already been removed from the database), use the `remove_vote` method instead.
 
         Args:
-                voter_id (int): The ID of the user whose vote is to be deleted.
+            voter_id: The ID of the user whose vote is to be deleted.
         """
         asyncio.create_task(
             data.cruds.votes_crud.delete_users_votes_from_option(
@@ -94,7 +94,7 @@ class Option:
         """Add a vote from the given user on this option. If such a vote already exists, nothing happens. If the poll cannot have more than one vote per user, all other votes from this user are removed.
 
         Args:
-                voter_id (int): The ID of the user whose vote is to be added.
+            voter_id: The ID of the user whose vote is to be added.
         """
         if not self.poll.allow_multiple_votes:
             self.poll.remove_votes_from(voter_id)
@@ -105,7 +105,7 @@ class Option:
         """Toggle a user's vote on this option. If adding their vote would cause too many votes from the same user, the rest of their votes are removed.
 
         Args:
-                voter_id (int): The ID of the user to toggle the vote of.
+            voter_id: The ID of the user to toggle the vote of.
         """
         if voter_id in self.__votes:
             self.delete_vote(voter_id)
@@ -119,12 +119,12 @@ class Option:
         """Create a new option for the given poll and add it to the database.
 
         Args:
-                label (str): The label of the option to create.
-                poll (Poll): The poll to create the option for.
-                author_id (Optional[int]): The ID of the member who created the option, or None, if the option is being created at poll creation.
+            label: The label of the option to create.
+            poll: The poll to create the option for.
+            author_id: The ID of the member who created the option, or None, if the option is being created at poll creation.
 
         Returns:
-                Option: The created option.
+            The created option.
         """
         return (await Option.create_options((label,), poll, author_id))[0]
 
@@ -138,12 +138,12 @@ class Option:
         """Create new Option objects for the given poll and add them to the database.
 
         Args:
-                labels (str): The labels of the options to add.
-                poll (Poll): The ID of the poll that this option belongs to.
-                author_id (Optional[int], optional): The ID of the person who added this option, or None if the options were created at the time of creation.
+            labels: The labels of the options to add.
+            poll: The ID of the poll that this option belongs to.
+            author_id: The ID of the person who added this option, or None if the options were created at the time of creation.
 
         Returns:
-                list[Option]: The new Option objects.
+            The new Option objects.
         """
         options = [
             Option(None, label, (), poll, index, author_id)

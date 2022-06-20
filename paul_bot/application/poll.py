@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class Poll:
+    MAX_OPTIONS = 23
+    MAX_OPTION_LENGTH = 251
+
     def __init__(
         self,
         poll_id: Optional[int],
@@ -121,11 +124,11 @@ class Poll:
         """Add an option to the poll.
 
         Args:
-                label (str): The label of the option to add.
-                author_id (int): The ID of the user who added the option.
+            label: The label of the option to add.
+            author_id: The ID of the user who added the option.
 
         Returns:
-                Option: The created option.
+            The created option.
         """
         option = await Option.create_option(label, self, author_id)
         self.add_option(option)
@@ -137,7 +140,7 @@ class Poll:
         This function will mark it as closed and expired in the database and update the message accordingly.
 
         Args:
-                bot (Paul): The bot to use to update the message.
+            bot: The bot to use to update the message.
         """
         now = datetime.now(pytz.utc)
         if not self.is_expired:
@@ -155,7 +158,7 @@ class Poll:
         """Remove all votes from the given user on this poll.
 
         Args:
-                voter_id (int): The ID of the user whose votes should be removed.
+            voter_id: The ID of the user whose votes should be removed.
         """
         asyncio.create_task(
             data.cruds.votes_crud.delete_users_votes_from_poll(self.poll_id, voter_id)
@@ -177,15 +180,15 @@ class Poll:
         """Create a new poll.
 
         Args:
-                params (PollCommandParams): The parameters of the poll command that the user triggered.
-                author_id (int): The ID of the user who wants to create the poll.
-                message (Message): The message that the poll should be put into.
+            params: The parameters of the poll command that the user triggered.
+            author_id: The ID of the user who wants to create the poll.
+            message: The message that the poll should be put into.
 
         Returns:
-                Poll: The created poll.
+            The created poll.
 
         Raises:
-                RuntimeError: If the poll's options could not be added.
+            RuntimeError: If the poll's options could not be added.
         """
         poll = Poll(
             None,

@@ -6,7 +6,7 @@ import dateparser
 import re
 import logging
 from .errors import FriendlyError
-from ..application.mention import Mention
+from ..application import Poll, Mention
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +14,15 @@ logger = logging.getLogger(__name__)
 def parse_options(sep: str = "|") -> Callable[[Interaction, str], list[str]]:
     def converter(inter: Interaction, options: str) -> list[str]:
         result = [option.strip() for option in options.split(sep) if option]
-        if len(result) > 23:
+        if len(result) > Poll.MAX_OPTIONS:
             raise FriendlyError(
-                f'Too many options. Maximum is 23.\nOptions: "{result}"',
+                f'Too many options. Maximum is {Poll.MAX_OPTIONS}.\nOptions: "{result}"',
                 inter,
             )
         for option in result:
-            if len(option) > 253:
+            if len(option) > Poll.MAX_OPTION_LENGTH:
                 raise FriendlyError(
-                    f'Option "{option}" is too long. Maximum is 253 characters.',
+                    f'Option "{option}" is too long. Maximum is {Poll.MAX_OPTION_LENGTH} characters.',
                     inter,
                 )
         if not result:
@@ -60,7 +60,7 @@ def parse_expires(inter: Interaction, expires: str) -> datetime:
     )
 
 
-MENTION_REGEX = re.compile(r"<(@[!&])?(\d+)>")
+MENTION_REGEX = re.compile(r"<(@[!&])?(\d{18})>")
 
 
 def parse_mentions(inter: Interaction, string: str) -> list[Mention]:

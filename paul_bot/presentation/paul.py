@@ -9,10 +9,11 @@ from disnake.ext.commands.bot import InteractionBot
 from disnake.ext.commands.params import Param
 from disnake.interactions.application_command import GuildCommandInteraction
 from disnake.interactions.base import Interaction
+from disnake.interactions.modal import ModalInteraction
 from disnake.message import Message
 from disnake.guild import Guild
 from datetime import datetime
-from .errors import handle_error
+from .errors import FriendlyError, handle_error
 from .command_params import PollCommandParams
 from .ui.poll_view import PollView
 from .embeds.poll_closed_embed import PollClosedEmbed
@@ -126,8 +127,8 @@ class Paul(InteractionBot):
         """Close a poll immediately.
 
         Args:
-                poll (Poll): The poll to close.
-                message (Optional[Message]): The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
+            poll: The poll to close.
+            message: The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
         """
         logger.debug(f"Closing poll {poll.question}.")
         poll.close()
@@ -158,32 +159,35 @@ class Paul(InteractionBot):
             )
 
     async def add_poll_option(
-        self, poll: Poll, label: str, author_id: int, message: Optional[Message] = None
+        self, poll: Poll, label: str, author_id: int, inter: ModalInteraction
     ):
         """Add a new option to the given poll.
 
         Args:
-                poll (Poll): The poll to add the option to.
-                label (str): The label of the option.
-                author_id (int): The ID of the user who added the option.
-                message (Optional[Message], optional): The message containing the poll. If omitted, it will be fetched asynchronously.
+            poll: The poll to add the option to.
+            label: The label of the option.
+            author_id: The ID of the user who added the option.
+            message: The message containing the poll. If omitted, it will be fetched asynchronously.
         """
+        if len(poll.options) == Poll.MAX_OPTIONS:
+            raise FriendlyError("You can't add more options to this poll.", inter)
         await poll.new_option(label, author_id)
-        await self.__update_poll_message(poll, message)
+        await self.__update_poll_message(poll, inter.message)
         logger.debug(f"Added option {label} to poll {poll.question}")
 
     async def toggle_vote(self, option: Option, voter_id: int):
         """Toggle a voter's vote for an option, removing the voter's vote from another option if necessary.
 
         Args:
-                option (Option): The option to vote for.
-                voter_id (int): The ID of the user who voted.
+            option: The option to vote for.
+            voter_id: The ID of the user who voted.
         """
         option.toggle_vote(voter_id)
         await self.__update_poll_message(option.poll)
 
     async def __load_polls(self):
         """Fetch the polls from the database and set up the bot to react to poll interactions."""
+        start = datetime.now()
         for poll in await Poll.fetch_polls():
             self.__total_poll_count += 1
             if poll.is_opened:
@@ -191,7 +195,9 @@ class Paul(InteractionBot):
             else:
                 self.__closed_poll_count += 1
             self.add_view(PollView(self, poll))
-        logger.info(f"Finished loading {self.__total_poll_count} polls.")
+        logger.info(
+            f"Finished loading {self.__total_poll_count} polls. ({(datetime.now() - start).seconds}s)"
+        )
 
     async def __poll_close_task(self, poll: Poll, message: Optional[Message] = None):
         """Close a poll at a specific time.
@@ -199,8 +205,8 @@ class Paul(InteractionBot):
         This function blocks until the poll is closed if awaited, so you probably want to make it run in the background instead.
 
         Args:
-                poll (Poll): The poll to close.
-                message (Optional[Message]): The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
+            poll: The poll to close.
+            message: The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
         """
         if poll.expires is None:
             return
@@ -213,8 +219,8 @@ class Paul(InteractionBot):
         """Update the poll's message. This should be called after a poll changes.
 
         Args:
-                poll (Poll): The poll whose message should be updated.
-                message (Optional[Message], optional): The message containing the poll. If omitted, it will be fetched asynchronously.
+            poll: The poll whose message should be updated.
+            message: The message containing the poll. If omitted, it will be fetched asynchronously.
         """
         try:
             message = message or await self.__get_poll_message(poll)
