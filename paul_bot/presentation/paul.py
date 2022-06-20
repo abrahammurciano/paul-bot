@@ -57,6 +57,12 @@ class Paul(InteractionBot):
         async def on_slash_command_error(inter: Interaction, error: Exception):
             await handle_error(error)
 
+        @self.event
+        async def on_error(self, event: str, *args, **kwargs):
+            logger.exception(f"Error in {event} event: {args=} {kwargs=}")
+            # Just in case i don't know what i'm doing
+            await super().on_error(event, *args, **kwargs)
+
         @self.slash_command(desc="Create a poll")
         async def poll(
             inter: GuildCommandInteraction,
