@@ -60,7 +60,7 @@ def parse_expires(inter: Interaction, expires: str) -> datetime:
     )
 
 
-MENTION_REGEX = re.compile(r"<(@[!&])?(\d{18})>")
+MENTION_REGEX = re.compile(r"<(@[!&])?(\d+)>")
 
 
 def parse_mentions(inter: Interaction, string: str) -> list[Mention]:
@@ -69,7 +69,10 @@ def parse_mentions(inter: Interaction, string: str) -> list[Mention]:
         if inter.guild
         else string
     )
-    return [Mention(tup[0], int(tup[1])) for tup in MENTION_REGEX.findall(string)]
+    return [
+        Mention(prefix, int(mention_id))
+        for prefix, mention_id in MENTION_REGEX.findall(string)
+    ]
 
 
 def length_bound_str(max: int, min: int = 0):
