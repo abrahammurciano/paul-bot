@@ -1,0 +1,9 @@
+# fly.toml file generated for paul on 2022-12-01T18:28:39+02:00
+
+app = "paul"
+kill_signal = "SIGINT"
+kill_timeout = 5
+processes = []
+
+[env]
+MAX_DB_CONNECTIONS = "4"

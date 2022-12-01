@@ -5,9 +5,9 @@ description = ""
 authors = ["Abraham Murciano <abrahammurciano@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "3.10.4"
+python = "^3.10"
 disnake = "^2.4"
-asyncpg = "^0.24"
+asyncpg = "^0.27"
 dateparser = "^1.1"
 discord-lumberjack = "^1.0"
 python-dotenv = "^0.19"
