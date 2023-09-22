@@ -71,5 +71,9 @@
 		"xml",
 		"xsl"
 	],
-	"cmake.configureOnOpen": false
+	"cmake.configureOnOpen": false,
+	"[python]": {
+		"editor.defaultFormatter": "ms-python.black-formatter"
+	},
+	"python.formatting.provider": "none"
 }

@@ -12,7 +12,7 @@ from disnake.interactions.base import Interaction
 from disnake.interactions.modal import ModalInteraction
 from disnake.message import Message
 from disnake.guild import Guild
-from datetime import datetime
+from datetime import datetime, timedelta
 from .errors import FriendlyError, handle_error
 from .command_params import PollCommandParams
 from .ui.poll_view import PollView
@@ -80,10 +80,10 @@ class Paul(InteractionBot):
             expires: Optional[datetime] = Param(
                 desc=(
                     "When to stop accepting votes, e.g. 1h20m or 1pm UTC+2. Default"
-                    " timezone is UTC. Default is never."
+                    " timezone is UTC. Default is 30 days."
                 ),
                 converter=parse_expires,
-                default=None,
+                default=lambda _: datetime.now() + timedelta(days=30),
             ),
             allow_multiple_votes: bool = Param(
                 desc="Can a user choose multiple options?", default=False
@@ -106,7 +106,11 @@ class Paul(InteractionBot):
             ),
             allowed_voters: list[Mention] = Param(
                 desc="Mention members or roles who may vote. Default is @everyone.",
-                default=lambda inter: [Mention("@&", inter.guild.default_role.id)],
+                default=lambda inter: [
+                    Mention("@&", inter.guild.default_role.id)
+                    if inter.guild
+                    else Mention("@", inter.user.id)
+                ],
                 converter=parse_mentions,
             ),
         ):

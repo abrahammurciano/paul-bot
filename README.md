@@ -56,7 +56,7 @@ When entering options, you must separate each option with a pipe character (`|`)
 
 ### expires
 
-With this parameter, you can choose when the poll will expire. Once the poll is expired, the vote buttons will disappear. By default, polls never expire.
+With this parameter, you can choose when the poll will expire. Once the poll is expired, the vote buttons will disappear. By default, polls expire 30 days from creation.
 
 When entering the expiry date/time, you may be quite liberal in its format. You can enter a relative date/time, such as "in 2 minutes", "1h20m", "tomorrow", "next week", etc; or you can enter an absolute date/time, such as "5 PM", "26 oct 2022", etc.
 

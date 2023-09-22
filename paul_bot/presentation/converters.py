@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 from disnake.interactions import ApplicationCommandInteraction as Interaction
 import pytz
 from datetime import datetime
@@ -39,8 +39,10 @@ def parse_options(sep: str = "|") -> Callable[[Interaction, str], list[str]]:
 RELATIVE_DATE_PARSE_FIX = re.compile(r"([dhms])(\d)")
 
 
-def parse_expires(inter: Interaction, expires: str) -> datetime:
+def parse_expires(inter: Interaction, expires: str) -> Optional[datetime]:
     # Workaround for https://github.com/scrapinghub/dateparser/issues/1012
+    if expires.lower() == "never":
+        return None
     expires = RELATIVE_DATE_PARSE_FIX.sub(r"\1 \2", expires)
     result = dateparser.parse(
         expires,
