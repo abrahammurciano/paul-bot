@@ -79,7 +79,7 @@ class Paul(InteractionBot):
                     " timezone is UTC. Default is 30 days."
                 ),
                 converter=parse_expires,
-                default=lambda _: datetime.now() + timedelta(days=30),
+                default=lambda _: datetime.now(pytz.utc) + timedelta(days=30),
             ),
             allow_multiple_votes: bool = Param(
                 desc="Can a user choose multiple options?", default=False
