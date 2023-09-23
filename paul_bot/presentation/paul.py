@@ -1,33 +1,29 @@
 import asyncio
-import pytz
-import disnake
 import logging
+from datetime import datetime, timedelta
 from typing import Iterable, Optional
+
+import disnake
+import pytz
 from disnake.enums import ActivityType
 from disnake.errors import Forbidden
 from disnake.ext.commands.bot import InteractionBot
 from disnake.ext.commands.params import Param
+from disnake.guild import Guild
 from disnake.interactions.application_command import GuildCommandInteraction
 from disnake.interactions.base import Interaction
 from disnake.interactions.modal import ModalInteraction
 from disnake.message import Message
-from disnake.guild import Guild
-from datetime import datetime, timedelta
-from .errors import FriendlyError, handle_error
+
+from ..application import Mention, Poll
+from ..application.option import Option
 from .command_params import PollCommandParams
-from .ui.poll_view import PollView
+from .converters import length_bound_str, parse_expires, parse_mentions, parse_options
 from .embeds.poll_closed_embed import PollClosedEmbed
 from .embeds.poll_embed import PollEmbed
 from .embeds.poll_embed_base import PollEmbedBase
-from .converters import (
-    length_bound_str,
-    parse_expires,
-    parse_mentions,
-    parse_options,
-)
-from ..application import Mention
-from ..application import Poll
-from ..application.option import Option
+from .errors import FriendlyError, handle_error
+from .ui.poll_view import PollView
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +57,7 @@ class Paul(InteractionBot):
         async def on_error(self, event: str, *args, **kwargs):
             logger.exception(f"Error in {event} event: {args=} {kwargs=}")
             # Just in case i don't know what i'm doing
-            await super().on_error(event, *args, **kwargs)
+            await super(Paul, self).on_error(event, *args, **kwargs)
 
         @self.slash_command(desc="Create a poll")
         async def poll(

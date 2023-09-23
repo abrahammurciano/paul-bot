@@ -1,6 +1,8 @@
-import asyncpg
-from typing import Any, Iterable, Optional, Sequence, Tuple, Union, overload
 from itertools import chain
+from typing import Any, Iterable, Optional, Sequence, Tuple, Union, overload
+
+import asyncpg
+
 from . import util
 
 
@@ -66,7 +68,7 @@ async def one(
     results = await many(
         pool, table, keys, (values,), on_conflict=on_conflict, returning=returning
     )
-    return results[0] if returning is not None else None
+    return results[0] if results is not None else None
 
 
 @overload

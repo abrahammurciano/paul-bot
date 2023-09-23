@@ -1,10 +1,10 @@
 {
 	"configurations": [
 		{
-			"name": "Python: Module",
+			"name": "Paul",
 			"type": "python",
 			"request": "launch",
-			"module": "paul_bot.main",
+			"module": "paul_bot",
 			"justMyCode": true
 		}
 	]

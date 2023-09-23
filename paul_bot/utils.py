@@ -1,15 +1,15 @@
 from itertools import zip_longest
 from logging import LogRecord
 from typing import Iterable, Optional, Tuple, TypeVar
-from discord_lumberjack.message_creators import EmbedMessageCreator
 
+from discord_lumberjack.message_creators import EmbedMessageCreator
 
 T = TypeVar("T")
 
 
 def chunks(
     iterable: Iterable[T], chunk_size: int, fill_value: Optional[T] = None
-) -> Iterable[Tuple[Optional[T]]]:
+) -> Iterable[Tuple[Optional[T], ...]]:
     """
     Given an iterable, splits it into chunks of up to the given size.
 
