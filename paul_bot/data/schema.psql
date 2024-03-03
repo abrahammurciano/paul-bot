@@ -24,7 +24,7 @@ CREATE EXTENSION IF NOT EXISTS btree_gin WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION btree_gin; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION btree_gin; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION btree_gin IS 'support for indexing common datatypes in GIN';
@@ -38,7 +38,7 @@ CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiST';
@@ -52,7 +52,7 @@ CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION citext; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION citext; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION citext IS 'data type for case-insensitive character strings';
@@ -66,7 +66,7 @@ CREATE EXTENSION IF NOT EXISTS cube WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION cube; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION cube; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION cube IS 'data type for multidimensional cubes';
@@ -80,7 +80,7 @@ CREATE EXTENSION IF NOT EXISTS dblink WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION dblink; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION dblink; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION dblink IS 'connect to other PostgreSQL databases from within a database';
@@ -94,7 +94,7 @@ CREATE EXTENSION IF NOT EXISTS dict_int WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION dict_int; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION dict_int; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION dict_int IS 'text search dictionary template for integers';
@@ -108,7 +108,7 @@ CREATE EXTENSION IF NOT EXISTS dict_xsyn WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION dict_xsyn; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION dict_xsyn; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION dict_xsyn IS 'text search dictionary template for extended synonym processing';
@@ -122,7 +122,7 @@ CREATE EXTENSION IF NOT EXISTS earthdistance WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION earthdistance; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION earthdistance; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION earthdistance IS 'calculate great-circle distances on the surface of the Earth';
@@ -136,7 +136,7 @@ CREATE EXTENSION IF NOT EXISTS fuzzystrmatch WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION fuzzystrmatch; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION fuzzystrmatch; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION fuzzystrmatch IS 'determine similarities and distance between strings';
@@ -150,7 +150,7 @@ CREATE EXTENSION IF NOT EXISTS hstore WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION hstore; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION hstore; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION hstore IS 'data type for storing sets of (key, value) pairs';
@@ -164,7 +164,7 @@ CREATE EXTENSION IF NOT EXISTS intarray WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION intarray; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION intarray; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION intarray IS 'functions, operators, and index support for 1-D arrays of integers';
@@ -178,7 +178,7 @@ CREATE EXTENSION IF NOT EXISTS ltree WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION ltree; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION ltree; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION ltree IS 'data type for hierarchical tree-like structures';
@@ -192,7 +192,7 @@ CREATE EXTENSION IF NOT EXISTS pg_stat_statements WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pg_stat_statements; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION pg_stat_statements; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION pg_stat_statements IS 'track planning and execution statistics of all SQL statements executed';
@@ -206,7 +206,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching based on trigrams';
@@ -220,7 +220,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
@@ -234,7 +234,7 @@ CREATE EXTENSION IF NOT EXISTS pgrowlocks WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pgrowlocks; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION pgrowlocks; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION pgrowlocks IS 'show row-level locking information';
@@ -248,7 +248,7 @@ CREATE EXTENSION IF NOT EXISTS pgstattuple WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pgstattuple; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION pgstattuple; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION pgstattuple IS 'show tuple-level statistics';
@@ -262,7 +262,7 @@ CREATE EXTENSION IF NOT EXISTS tablefunc WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION tablefunc; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION tablefunc; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION tablefunc IS 'functions that manipulate whole tables, including crosstab';
@@ -276,7 +276,7 @@ CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
@@ -290,7 +290,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
@@ -304,14 +304,14 @@ CREATE EXTENSION IF NOT EXISTS xml2 WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION xml2; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION xml2; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION xml2 IS 'XPath querying and XSLT';
 
 
 --
--- Name: mention; Type: TYPE; Schema: public; Owner: ztczjmqg
+-- Name: mention; Type: TYPE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE TYPE public.mention AS (
@@ -320,10 +320,10 @@ CREATE TYPE public.mention AS (
 );
 
 
-ALTER TYPE public.mention OWNER TO ztczjmqg;
+ALTER TYPE public.mention OWNER TO CURRENT_USER;
 
 --
--- Name: option; Type: TYPE; Schema: public; Owner: ztczjmqg
+-- Name: option; Type: TYPE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE TYPE public.option AS (
@@ -335,10 +335,10 @@ CREATE TYPE public.option AS (
 );
 
 
-ALTER TYPE public.option OWNER TO ztczjmqg;
+ALTER TYPE public.option OWNER TO CURRENT_USER;
 
 --
--- Name: vote; Type: TYPE; Schema: public; Owner: ztczjmqg
+-- Name: vote; Type: TYPE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE TYPE public.vote AS (
@@ -347,14 +347,14 @@ CREATE TYPE public.vote AS (
 );
 
 
-ALTER TYPE public.vote OWNER TO ztczjmqg;
+ALTER TYPE public.vote OWNER TO CURRENT_USER;
 
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: allowed_editors; Type: TABLE; Schema: public; Owner: ztczjmqg
+-- Name: allowed_editors; Type: TABLE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE TABLE public.allowed_editors (
@@ -364,10 +364,10 @@ CREATE TABLE public.allowed_editors (
 );
 
 
-ALTER TABLE public.allowed_editors OWNER TO ztczjmqg;
+ALTER TABLE public.allowed_editors OWNER TO CURRENT_USER;
 
 --
--- Name: allowed_vote_viewers; Type: TABLE; Schema: public; Owner: ztczjmqg
+-- Name: allowed_vote_viewers; Type: TABLE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE TABLE public.allowed_vote_viewers (
@@ -377,10 +377,10 @@ CREATE TABLE public.allowed_vote_viewers (
 );
 
 
-ALTER TABLE public.allowed_vote_viewers OWNER TO ztczjmqg;
+ALTER TABLE public.allowed_vote_viewers OWNER TO CURRENT_USER;
 
 --
--- Name: allowed_voters; Type: TABLE; Schema: public; Owner: ztczjmqg
+-- Name: allowed_voters; Type: TABLE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE TABLE public.allowed_voters (
@@ -390,10 +390,10 @@ CREATE TABLE public.allowed_voters (
 );
 
 
-ALTER TABLE public.allowed_voters OWNER TO ztczjmqg;
+ALTER TABLE public.allowed_voters OWNER TO CURRENT_USER;
 
 --
--- Name: polls; Type: TABLE; Schema: public; Owner: ztczjmqg
+-- Name: polls; Type: TABLE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE TABLE public.polls (
@@ -408,10 +408,10 @@ CREATE TABLE public.polls (
 );
 
 
-ALTER TABLE public.polls OWNER TO ztczjmqg;
+ALTER TABLE public.polls OWNER TO CURRENT_USER;
 
 --
--- Name: grouped_allowed_editors; Type: VIEW; Schema: public; Owner: ztczjmqg
+-- Name: grouped_allowed_editors; Type: VIEW; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE VIEW public.grouped_allowed_editors AS
@@ -422,10 +422,10 @@ CREATE VIEW public.grouped_allowed_editors AS
   GROUP BY polls.id;
 
 
-ALTER TABLE public.grouped_allowed_editors OWNER TO ztczjmqg;
+ALTER TABLE public.grouped_allowed_editors OWNER TO CURRENT_USER;
 
 --
--- Name: grouped_allowed_vote_viewers; Type: VIEW; Schema: public; Owner: ztczjmqg
+-- Name: grouped_allowed_vote_viewers; Type: VIEW; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE VIEW public.grouped_allowed_vote_viewers AS
@@ -436,10 +436,10 @@ CREATE VIEW public.grouped_allowed_vote_viewers AS
   GROUP BY polls.id;
 
 
-ALTER TABLE public.grouped_allowed_vote_viewers OWNER TO ztczjmqg;
+ALTER TABLE public.grouped_allowed_vote_viewers OWNER TO CURRENT_USER;
 
 --
--- Name: grouped_allowed_voters; Type: VIEW; Schema: public; Owner: ztczjmqg
+-- Name: grouped_allowed_voters; Type: VIEW; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE VIEW public.grouped_allowed_voters AS
@@ -450,10 +450,10 @@ CREATE VIEW public.grouped_allowed_voters AS
   GROUP BY polls.id;
 
 
-ALTER TABLE public.grouped_allowed_voters OWNER TO ztczjmqg;
+ALTER TABLE public.grouped_allowed_voters OWNER TO CURRENT_USER;
 
 --
--- Name: options_extended_view; Type: VIEW; Schema: public; Owner: ztczjmqg
+-- Name: options_extended_view; Type: VIEW; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE VIEW public.options_extended_view AS
@@ -466,10 +466,10 @@ SELECT
     NULL::integer AS index;
 
 
-ALTER TABLE public.options_extended_view OWNER TO ztczjmqg;
+ALTER TABLE public.options_extended_view OWNER TO CURRENT_USER;
 
 --
--- Name: grouped_options; Type: VIEW; Schema: public; Owner: ztczjmqg
+-- Name: grouped_options; Type: VIEW; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE VIEW public.grouped_options AS
@@ -480,10 +480,10 @@ CREATE VIEW public.grouped_options AS
   GROUP BY polls.id;
 
 
-ALTER TABLE public.grouped_options OWNER TO ztczjmqg;
+ALTER TABLE public.grouped_options OWNER TO CURRENT_USER;
 
 --
--- Name: options; Type: TABLE; Schema: public; Owner: ztczjmqg
+-- Name: options; Type: TABLE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE TABLE public.options (
@@ -495,10 +495,10 @@ CREATE TABLE public.options (
 );
 
 
-ALTER TABLE public.options OWNER TO ztczjmqg;
+ALTER TABLE public.options OWNER TO CURRENT_USER;
 
 --
--- Name: options_id_seq; Type: SEQUENCE; Schema: public; Owner: ztczjmqg
+-- Name: options_id_seq; Type: SEQUENCE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE SEQUENCE public.options_id_seq
@@ -510,17 +510,17 @@ CREATE SEQUENCE public.options_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.options_id_seq OWNER TO ztczjmqg;
+ALTER TABLE public.options_id_seq OWNER TO CURRENT_USER;
 
 --
--- Name: options_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: ztczjmqg
+-- Name: options_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER SEQUENCE public.options_id_seq OWNED BY public.options.id;
 
 
 --
--- Name: polls_extended_view; Type: VIEW; Schema: public; Owner: ztczjmqg
+-- Name: polls_extended_view; Type: VIEW; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE VIEW public.polls_extended_view AS
@@ -543,10 +543,10 @@ CREATE VIEW public.polls_extended_view AS
      LEFT JOIN public.grouped_allowed_editors ON ((polls.id = grouped_allowed_editors.id)));
 
 
-ALTER TABLE public.polls_extended_view OWNER TO ztczjmqg;
+ALTER TABLE public.polls_extended_view OWNER TO CURRENT_USER;
 
 --
--- Name: polls_id_seq; Type: SEQUENCE; Schema: public; Owner: ztczjmqg
+-- Name: polls_id_seq; Type: SEQUENCE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE SEQUENCE public.polls_id_seq
@@ -558,17 +558,17 @@ CREATE SEQUENCE public.polls_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.polls_id_seq OWNER TO ztczjmqg;
+ALTER TABLE public.polls_id_seq OWNER TO CURRENT_USER;
 
 --
--- Name: polls_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: ztczjmqg
+-- Name: polls_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER SEQUENCE public.polls_id_seq OWNED BY public.polls.id;
 
 
 --
--- Name: votes; Type: TABLE; Schema: public; Owner: ztczjmqg
+-- Name: votes; Type: TABLE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE TABLE public.votes (
@@ -577,24 +577,24 @@ CREATE TABLE public.votes (
 );
 
 
-ALTER TABLE public.votes OWNER TO ztczjmqg;
+ALTER TABLE public.votes OWNER TO CURRENT_USER;
 
 --
--- Name: options id; Type: DEFAULT; Schema: public; Owner: ztczjmqg
+-- Name: options id; Type: DEFAULT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.options ALTER COLUMN id SET DEFAULT nextval('public.options_id_seq'::regclass);
 
 
 --
--- Name: polls id; Type: DEFAULT; Schema: public; Owner: ztczjmqg
+-- Name: polls id; Type: DEFAULT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.polls ALTER COLUMN id SET DEFAULT nextval('public.polls_id_seq'::regclass);
 
 
 --
--- Name: allowed_editors allowed_editors_pkey; Type: CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: allowed_editors allowed_editors_pkey; Type: CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.allowed_editors
@@ -602,7 +602,7 @@ ALTER TABLE ONLY public.allowed_editors
 
 
 --
--- Name: allowed_vote_viewers allowed_vote_viewers_pkey; Type: CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: allowed_vote_viewers allowed_vote_viewers_pkey; Type: CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.allowed_vote_viewers
@@ -610,7 +610,7 @@ ALTER TABLE ONLY public.allowed_vote_viewers
 
 
 --
--- Name: allowed_voters allowed_voters_pkey; Type: CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: allowed_voters allowed_voters_pkey; Type: CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.allowed_voters
@@ -618,7 +618,7 @@ ALTER TABLE ONLY public.allowed_voters
 
 
 --
--- Name: options options_pkey; Type: CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: options options_pkey; Type: CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.options
@@ -626,7 +626,7 @@ ALTER TABLE ONLY public.options
 
 
 --
--- Name: polls polls_pkey; Type: CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: polls polls_pkey; Type: CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.polls
@@ -634,7 +634,7 @@ ALTER TABLE ONLY public.polls
 
 
 --
--- Name: options unique_options_poll_id_index; Type: CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: options unique_options_poll_id_index; Type: CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.options
@@ -642,7 +642,7 @@ ALTER TABLE ONLY public.options
 
 
 --
--- Name: votes votes_pkey; Type: CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: votes votes_pkey; Type: CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.votes
@@ -650,7 +650,7 @@ ALTER TABLE ONLY public.votes
 
 
 --
--- Name: options_extended_view _RETURN; Type: RULE; Schema: public; Owner: ztczjmqg
+-- Name: options_extended_view _RETURN; Type: RULE; Schema: public; Owner: CURRENT_USER
 --
 
 CREATE OR REPLACE VIEW public.options_extended_view AS
@@ -666,7 +666,7 @@ CREATE OR REPLACE VIEW public.options_extended_view AS
 
 
 --
--- Name: allowed_editors allowed_editors_poll_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: allowed_editors allowed_editors_poll_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.allowed_editors
@@ -674,7 +674,7 @@ ALTER TABLE ONLY public.allowed_editors
 
 
 --
--- Name: allowed_vote_viewers allowed_vote_viewers_poll_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: allowed_vote_viewers allowed_vote_viewers_poll_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.allowed_vote_viewers
@@ -682,7 +682,7 @@ ALTER TABLE ONLY public.allowed_vote_viewers
 
 
 --
--- Name: allowed_voters allowed_voters_poll_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: allowed_voters allowed_voters_poll_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.allowed_voters
@@ -690,7 +690,7 @@ ALTER TABLE ONLY public.allowed_voters
 
 
 --
--- Name: options options_poll_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: options options_poll_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.options
@@ -698,7 +698,7 @@ ALTER TABLE ONLY public.options
 
 
 --
--- Name: votes votes_option_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: ztczjmqg
+-- Name: votes votes_option_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: CURRENT_USER
 --
 
 ALTER TABLE ONLY public.votes
@@ -708,4 +708,3 @@ ALTER TABLE ONLY public.votes
 --
 -- PostgreSQL database dump complete
 --
-
