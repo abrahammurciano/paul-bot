@@ -2,6 +2,20 @@
 
 Hi! I'm Paul; a teeny tiny bot who's good at one thing. Making polls. And when I say good, I mean really really good. Like the bestest best bot ever at making polls. I can make open polls, I can make closed polls, I can make dynamically editable polls, and I can make them any size. And all that with a simple, good-looking, and easy to use interface! So come on and try me out in your server!
 
+## Table of Contents
+- [Links](#links)
+- [Features](#features)
+- [Usage](#usage)
+	- [question](#question)
+	- [options](#options)
+	- [expires](#expires)
+	- [allow_multiple_votes](#allow_multiple_votes)
+	- [allowed_vote_viewers](#allowed_vote_viewers)
+	- [allowed_editors](#allowed_editors)
+	- [allowed_voters](#allowed_voters)
+	- [Closing the poll](#closing-the-poll)
+- [Self Hosting](#self-hosting)
+
 ## Links
 
 ### [Invite Me](https://discord.com/api/oauth2/authorize?client_id=902944827598049321&permissions=2147551296&scope=bot%20applications.commands)
@@ -117,3 +131,60 @@ Use this parameter to restrict who may vote to a set of users and roles. By defa
 ### Closing the poll
 
 You can use the big red button to close the poll manually without waiting for it to expire. Once you do this, there's no turning back. Only the poll creator can do this.
+
+## Self Hosting
+
+This bot is hosted on [fly.io](https://fly.io) so these instructions are tailored to that platform. However, you can host it on any other platform, you'll just need to figure out how to do it yourself.
+
+### Create a bot
+
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and create a new application.
+2. Go to the "Bot" tab and click "Add Bot".
+3. Copy the token and save it for later.
+
+### Create a fly.io app
+
+1. Install the fly.io CLI by following the instructions [here](https://fly.io/docs/getting-started/installing-flyctl/).
+2. Use `flyctl auth login` or `flyctl auth signup` to (create and) log in to your fly.io account.
+3. Run `flyctl create` and follow the instructions to create a new app.
+
+### Create a PostgreSQL database
+
+You can use any PostgreSQL hosting service you like. Here are instructions for hosting one on fly.io.
+
+Run `flyctl postgres create` to create a new PostgreSQL database. The output will contain the connection string which has the username, password, host, etc. It will look something like this:
+
+```
+postgres://user:password@app-name.flycast:5432
+```
+
+Save it for later.
+
+### Initialize the database
+
+You need to run the `paul/data/schema.psql` file on the database to create the necessary schema.
+
+First run this command to make localhost:5432 act as a proxy to the fly.io database:
+
+```sh
+flyctl proxy 5432 -a <app-name>
+```
+
+Then run this command to import the schema:
+
+```sh
+psql postgres://user:password@localhost:5432 -f paul_bot/data/schema.psql
+```
+
+### Set fly.io secrets
+
+Use the following command to set the secrets for the bot.
+
+```sh
+flyctl secrets set BOT_TOKEN=<your bot token> DATABASE_URL=<database url> DBG_CHANNEL=<channel id> ERR_CHANNEL=<channel id>
+```
+
+- `BOT_TOKEN` is the token you copied from the Discord Developer Portal.
+- `DATABASE_URL` is the connection string you got from creating the PostgreSQL database.
+- `DBG_CHANNEL` (optional) is the channel ID where you want to receive debug messages.
+- `ERR_CHANNEL` (optional) is the channel ID where you want to receive error messages.
