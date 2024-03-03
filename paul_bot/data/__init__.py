@@ -9,7 +9,6 @@ from .votes_crud import VotesCrud
 async def init():
     pool = await asyncpg.create_pool(
         os.environ["DATABASE_URL"],
-        ssl="require",
         min_size=1,
         max_size=int(os.getenv("MAX_DB_CONNECTIONS", "5")),
     )
