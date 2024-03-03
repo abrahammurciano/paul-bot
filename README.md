@@ -152,28 +152,35 @@ This bot is hosted on [fly.io](https://fly.io) so these instructions are tailore
 
 You can use any PostgreSQL hosting service you like. Here are instructions for hosting one on fly.io.
 
-Run `flyctl postgres create` to create a new PostgreSQL database. The output will contain the connection string which has the username, password, host, etc. It will look something like this:
+Run the following commands to create a new PostgreSQL app and attach it to your main app. When you attach it, a new user and database will be created for the main app.
+
+```sh
+flyctl postgres create --name <app-name>-db
+flyctl postgres attach <app-name>-db
+```
+
+The output of the attach command will contain the connection string which has the username, password, host, etc. It will look something like this:
 
 ```
-postgres://user:password@app-name.flycast:5432
+postgres://<app-name>:<password>@<app-name>-db.flycast:5432/<app-name>
 ```
 
-Save it for later.
+It will be added as a secret (named `DATABASE_URL`) in the main app. Also, make a note of it as we'll need to create the initial schema on the database.
 
 ### Initialize the database
 
-You need to run the `paul/data/schema.psql` file on the database to create the necessary schema.
+You need to run the `paul_bot/data/schema.psql` file on the database to create the necessary schema.
 
-First run this command to make localhost:5432 act as a proxy to the fly.io database:
+First run the following command to make localhost:5432 act as a proxy to the fly.io database. It will block until you cancel with `Ctrl+C`, so run it in a different shell.
 
 ```sh
-flyctl proxy 5432 -a <app-name>
+flyctl proxy 5432 -a <app-name>-db
 ```
 
 Then run this command to import the schema:
 
 ```sh
-psql postgres://user:password@localhost:5432 -f paul_bot/data/schema.psql
+psql postgres://<app-name>:<password>@localhost:5432/<app-name> -f paul_bot/data/schema.psql
 ```
 
 ### Set fly.io secrets
@@ -181,10 +188,9 @@ psql postgres://user:password@localhost:5432 -f paul_bot/data/schema.psql
 Use the following command to set the secrets for the bot.
 
 ```sh
-flyctl secrets set BOT_TOKEN=<your bot token> DATABASE_URL=<database url> DBG_CHANNEL=<channel id> ERR_CHANNEL=<channel id>
+flyctl secrets set BOT_TOKEN=<your-bot-token> DBG_CHANNEL=<channel-id> ERR_CHANNEL=<channel-id>
 ```
 
 - `BOT_TOKEN` is the token you copied from the Discord Developer Portal.
-- `DATABASE_URL` is the connection string you got from creating the PostgreSQL database.
 - `DBG_CHANNEL` (optional) is the channel ID where you want to receive debug messages.
 - `ERR_CHANNEL` (optional) is the channel ID where you want to receive error messages.
