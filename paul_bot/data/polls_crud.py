@@ -56,17 +56,6 @@ class PollsCrud(Crud):
         """
         await sql.delete(self.pool, "polls", id=poll_id)
 
-    async def __insert_permissions(
-        self, table: str, mentions: Iterable[Mention], poll_id: int
-    ):
-        await sql.insert.many(
-            self.pool,
-            table,
-            ("poll_id", "mention_prefix", "mention_id"),
-            [(poll_id, mention.prefix, mention.mentioned_id) for mention in mentions],
-            on_conflict="DO NOTHING",
-        )
-
     async def fetch_all(self) -> AsyncIterator["Poll"]:
         """Get an async iterator over all the polls from the database."""
         records = sql.select.many(
@@ -108,6 +97,21 @@ class PollsCrud(Crud):
             "polls",
             set={"expires": expires, "closed": closed},
             where={"id": poll.poll_id},
+        )
+
+    async def count(self) -> int:
+        """Get the number of polls in the database."""
+        return await sql.select.value(self.pool, "polls", "COUNT(*)")
+
+    async def __insert_permissions(
+        self, table: str, mentions: Iterable[Mention], poll_id: int
+    ) -> None:
+        await sql.insert.many(
+            self.pool,
+            table,
+            ("poll_id", "mention_prefix", "mention_id"),
+            [(poll_id, mention.prefix, mention.mentioned_id) for mention in mentions],
+            on_conflict="DO NOTHING",
         )
 
     def __parse_options(

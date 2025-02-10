@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
-from typing import Iterable, override
+from typing import Any, Iterable, override
 
 import disnake
 import psutil
@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 class Paul(InteractionBot):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.__total_poll_count = 0
+        self.__loaded_poll_count = 0
+        self.__loading = True
         self.__closed_poll_count = 0
         self.__activity_name = ""
         self.__on_ready_triggered = False
@@ -43,7 +44,7 @@ class Paul(InteractionBot):
             if not self.__on_ready_triggered:
                 logger.info(f"\n{self.user.name} has connected to Discord!\n")
                 asyncio.create_task(self.__poll_close_task())
-                await self.__set_loading_presence()
+                asyncio.create_task(self.__set_loading_presence())
                 await self.__load_polls()
                 await self.__set_presence()
                 self.__on_ready_triggered = True
@@ -126,7 +127,7 @@ class Paul(InteractionBot):
     ):
         try:
             poll = await Poll.create_poll(params, author_id, message)
-            self.__total_poll_count += 1
+            self.__loaded_poll_count += 1
             await self.__update_poll_message(poll, message)
             await self.__set_presence()
             self.__close_queue.add(poll)
@@ -168,13 +169,14 @@ class Paul(InteractionBot):
         """Fetch the polls from the database and set up the bot to react to poll interactions."""
         start = datetime.now()
         async for poll in Poll.fetch_polls():
-            self.__total_poll_count += 1
+            self.__loaded_poll_count += 1
             if poll.closed:
                 self.__closed_poll_count += 1
             self.__close_queue.add(poll)
             self.add_view(PollView(self, poll))
+        self.__loading = False
         logger.info(
-            f"Finished loading {self.__total_poll_count} polls. ({(datetime.now() - start).seconds}s, {psutil.virtual_memory().percent}% memory used, {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB by Paul)"
+            f"Finished loading {self.__loaded_poll_count} polls. ({(datetime.now() - start).seconds}s, {psutil.virtual_memory().percent}% memory used, {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB by Paul)"
         )
 
     async def __poll_close_task(self) -> None:
@@ -204,20 +206,28 @@ class Paul(InteractionBot):
         )
 
     async def __set_presence(self) -> None:
-        active_polls = self.__total_poll_count - self.__closed_poll_count
-        activity_name = f"/poll. {active_polls} active, {self.__total_poll_count} total. ({len(self.guilds)} servers)"
+        active_polls = self.__loaded_poll_count - self.__closed_poll_count
+        activity_name = f"/poll. {active_polls} active, {self.__loaded_poll_count} total. ({len(self.guilds)} servers)"
         if activity_name != self.__activity_name:
             activity = disnake.Activity(name=activity_name, type=ActivityType.listening)
             await self.change_presence(activity=activity)
             self.__activity_name = activity_name
 
     async def __set_loading_presence(self) -> None:
-        activity = disnake.CustomActivity(name="Loading...", type=ActivityType.watching)
-        await self.change_presence(activity=activity, status=disnake.Status.dnd)
+        total = await Poll.count()
+        if total <= 0:
+            return
+        while self.__loading:
+            percent = self.__loaded_poll_count / total * 100
+            activity = disnake.CustomActivity(
+                name=f"Loading... {percent:.0f}%", type=ActivityType.watching
+            )
+            await self.change_presence(activity=activity, status=disnake.Status.dnd)
+            await asyncio.sleep(5)
 
     @override
-    async def on_error(self, event_name: str, *args, **kwargs) -> None:
-        logger.exception(f"Error in {event_name} event: {args=} {kwargs=}")
+    async def on_error(self, event_name: str, *_: Any, **__: Any) -> None:
+        logger.exception(f"Error in {event_name}")
 
     @override
     async def on_slash_command_error(

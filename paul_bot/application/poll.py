@@ -239,3 +239,12 @@ class Poll:
             An iterable of Poll objects.
         """
         return data.cruds.polls_crud.fetch_all()
+
+    @classmethod
+    async def count(cls) -> int:
+        """Get the number of polls in the database.
+
+        Returns:
+            The number of polls.
+        """
+        return await data.cruds.polls_crud.count()
