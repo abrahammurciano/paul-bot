@@ -1,9 +1,11 @@
 import logging
 from typing import TYPE_CHECKING
+
 from disnake.interactions import ModalInteraction
 from disnake.ui import TextInput
-from ..errors import ErrorHandlingModal
+
 from ...application.poll import Poll
+from ..errors import ErrorHandlingModal
 
 if TYPE_CHECKING:
     from paul_bot import Paul
@@ -12,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class AddOptionModal(ErrorHandlingModal):
-    def __init__(self, bot: "Paul", poll: Poll):
+    def __init__(self, bot: "Paul", poll: Poll) -> None:
         self.__bot = bot
         self.__poll = poll
         super().__init__(

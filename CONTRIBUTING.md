@@ -6,15 +6,15 @@ In order to get up and running with this project, you need to first clone the re
 $ git clone https://github.com/abrahammurciano/paul-bot.git
 ```
 
-Then, you need to create a development envrironment with the dependencies installed. (You need to to already have poetry installed for this command to work.)
+Then, you need to create a development environment with the dependencies installed. (You need to already have uv installed for this command to work.)
 
 ```sh
-$ poetry install
+$ uv sync
 ```
 
 You obviously need to create a Discord bot to get a token.
 
-You must create a database if you want to run the bot locally. You can use https://www.elephantsql.com/ for that. Once you have the database, run `paul/data/schema.psql` on that database to create the necessay database schema.
+You must create a database if you want to run the bot locally. You can use https://www.elephantsql.com/ for that. Once you have the database, run `paul/data/schema.psql` on that database to create the necessary database schema.
 ```sh
 $ psql -h hostname -d databasename -U username -f paul_bot/data/schema.psql
 ```
@@ -31,6 +31,5 @@ MAX_DB_CONNECTIONS=<Optional. The maximum number of database connections to open
 
 Finally, you can run the bot:
 ```sh
-$ poetry shell  # This will start a shell with the development environment. You only need to do it once per shell session.
-$ paul
+$ uv run paul
 ```

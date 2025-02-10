@@ -1,12 +1,14 @@
 import os
+
 import asyncpg
+
 from . import cruds
-from .polls_crud import PollsCrud
 from .options_crud import OptionsCrud
+from .polls_crud import PollsCrud
 from .votes_crud import VotesCrud
 
 
-async def init():
+async def init() -> None:
     pool = await asyncpg.create_pool(
         os.environ["DATABASE_URL"],
         min_size=1,

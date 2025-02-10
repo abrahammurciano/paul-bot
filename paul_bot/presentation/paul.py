@@ -1,10 +1,10 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Iterable, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Iterable, override
 
 import disnake
-import pytz
+import psutil
 from disnake.enums import ActivityType
 from disnake.errors import Forbidden
 from disnake.ext.commands.bot import InteractionBot
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class Paul(InteractionBot):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.__total_poll_count = 0
         self.__closed_poll_count = 0
@@ -37,7 +37,7 @@ class Paul(InteractionBot):
         self.__on_ready_triggered = False
 
         @self.event
-        async def on_ready():
+        async def on_ready() -> None:
             if not self.__on_ready_triggered:
                 logger.info(f"\n{self.user.name} has connected to Discord!\n")
                 await self.__load_polls()
@@ -45,19 +45,9 @@ class Paul(InteractionBot):
                 self.__on_ready_triggered = True
 
         @self.event
-        async def on_guild_join(guild: Guild):
+        async def on_guild_join(guild: Guild) -> None:
             logger.info(f"Joined guild {guild.name}.")
             await self.__set_presence()
-
-        @self.event
-        async def on_slash_command_error(inter: Interaction, error: Exception):
-            await handle_error(error)
-
-        @self.event
-        async def on_error(self, event: str, *args, **kwargs):
-            logger.exception(f"Error in {event} event: {args=} {kwargs=}")
-            # Just in case i don't know what i'm doing
-            await super(Paul, self).on_error(event, *args, **kwargs)
 
         @self.slash_command(desc="Create a poll")
         async def poll(
@@ -73,13 +63,13 @@ class Paul(InteractionBot):
                 converter=parse_options(sep="|"),
                 default=("Yes", "No"),
             ),
-            expires: Optional[datetime] = Param(
+            expires: datetime | None = Param(
                 desc=(
                     "When to stop accepting votes, e.g. 1h20m or 1pm UTC+2. Default"
                     " timezone is UTC. Default is 30 days."
                 ),
                 converter=parse_expires,
-                default=lambda _: datetime.now(pytz.utc) + timedelta(days=30),
+                default=lambda _: datetime.now(UTC) + timedelta(days=30),
             ),
             allow_multiple_votes: bool = Param(
                 desc="Can a user choose multiple options?", default=False
@@ -103,9 +93,11 @@ class Paul(InteractionBot):
             allowed_voters: list[Mention] = Param(
                 desc="Mention members or roles who may vote. Default is @everyone.",
                 default=lambda inter: [
-                    Mention("@&", inter.guild.default_role.id)
-                    if inter.guild
-                    else Mention("@", inter.user.id)
+                    (
+                        Mention("@&", inter.guild.default_role.id)
+                        if inter.guild
+                        else Mention("@", inter.user.id)
+                    )
                 ],
                 converter=parse_mentions,
             ),
@@ -129,7 +121,7 @@ class Paul(InteractionBot):
             await self.new_poll(params, inter.author.id, message)
             logger.debug(f"{inter.author.name} successfully created a poll {question}.")
 
-    async def close_poll_now(self, poll: Poll, message: Optional[Message] = None):
+    async def close_poll_now(self, poll: Poll, message: Message | None = None) -> None:
         """Close a poll immediately.
 
         Args:
@@ -181,7 +173,7 @@ class Paul(InteractionBot):
         await self.__update_poll_message(poll, inter.message)
         logger.debug(f"Added option {label} to poll {poll.question}")
 
-    async def toggle_vote(self, option: Option, voter_id: int):
+    async def toggle_vote(self, option: Option, voter_id: int) -> None:
         """Toggle a voter's vote for an option, removing the voter's vote from another option if necessary.
 
         Args:
@@ -191,7 +183,7 @@ class Paul(InteractionBot):
         option.toggle_vote(voter_id)
         await self.__update_poll_message(option.poll)
 
-    async def __load_polls(self):
+    async def __load_polls(self) -> None:
         """Fetch the polls from the database and set up the bot to react to poll interactions."""
         start = datetime.now()
         for poll in await Poll.fetch_polls():
@@ -202,10 +194,12 @@ class Paul(InteractionBot):
                 self.__closed_poll_count += 1
             self.add_view(PollView(self, poll))
         logger.info(
-            f"Finished loading {self.__total_poll_count} polls. ({(datetime.now() - start).seconds}s)"
+            f"Finished loading {self.__total_poll_count} polls. ({(datetime.now() - start).seconds}s, {psutil.virtual_memory().percent}% memory used, {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB by Paul)"
         )
 
-    async def __poll_close_task(self, poll: Poll, message: Optional[Message] = None):
+    async def __poll_close_task(
+        self, poll: Poll, message: Message | None = None
+    ) -> None:
         """Close a poll at a specific time.
 
         This function blocks until the poll is closed if awaited, so you probably want to make it run in the background instead.
@@ -216,12 +210,10 @@ class Paul(InteractionBot):
         """
         if poll.expires is None:
             return
-        await asyncio.sleep((poll.expires - datetime.now(pytz.utc)).total_seconds())
+        await asyncio.sleep((poll.expires - datetime.now(UTC)).total_seconds())
         await self.close_poll_now(poll, message)
 
-    async def __update_poll_message(
-        self, poll: Poll, message: Optional[Message] = None
-    ):
+    async def __update_poll_message(self, poll: Poll, message: Message | None = None):
         """Update the poll's message. This should be called after a poll changes.
 
         Args:
@@ -242,7 +234,7 @@ class Paul(InteractionBot):
             poll.message_id
         )
 
-    async def __set_presence(self):
+    async def __set_presence(self) -> None:
         active_polls = self.__total_poll_count - self.__closed_poll_count
         activity_name = (
             f"/poll. {active_polls} active, {self.__total_poll_count} total."
@@ -252,3 +244,13 @@ class Paul(InteractionBot):
             activity = disnake.Activity(name=activity_name, type=ActivityType.listening)
             await self.change_presence(activity=activity)
             self.__activity_name = activity_name
+
+    @override
+    async def on_error(self, event_name: str, *args, **kwargs) -> None:
+        logger.exception(f"Error in {event_name} event: {args=} {kwargs=}")
+
+    @override
+    async def on_slash_command_error(
+        self, inter: Interaction, error: Exception
+    ) -> None:
+        await handle_error(error)

@@ -1,16 +1,17 @@
 import disnake
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
-from .poll_action_button import PollActionButton
-from ..embeds.question_results_embed import QuestionResultsEmbed
-from ..embeds.see_option_results_embed import SeeOptionResultsEmbed
+
 from ...application.poll import Poll
 from ...utils import chunks
+from ..embeds.question_results_embed import QuestionResultsEmbed
+from ..embeds.see_option_results_embed import SeeOptionResultsEmbed
+from .poll_action_button import PollActionButton
 
 
 class SeeVotesButton(PollActionButton):
-    def __init__(self, poll: Poll):
-        async def show_votes(inter: MessageInteraction):
+    def __init__(self, poll: Poll) -> None:
+        async def show_votes(inter: MessageInteraction) -> None:
             await inter.response.defer(with_message=True, ephemeral=True)
             embeds: list[disnake.Embed] = [QuestionResultsEmbed(poll)]
             embeds.extend(

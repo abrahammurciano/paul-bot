@@ -1,13 +1,15 @@
-import disnake
 from datetime import datetime
-from typing import TYPE_CHECKING, Generator, Iterable, Optional
 from itertools import count
-from .poll_embed_base import PollEmbedBase
-from .colours import get_colour
+from typing import TYPE_CHECKING, Generator, Iterable
+
+import disnake
+
 from ...application.mention import Mention, mentions_str
+from .colours import get_colour
+from .poll_embed_base import PollEmbedBase
 
 if TYPE_CHECKING:
-    from application.poll import Poll
+    from paul_bot.application.poll import Poll
 
 
 class PollEmbed(PollEmbedBase):
@@ -20,7 +22,7 @@ class PollEmbed(PollEmbedBase):
         """Construct an Embed for the poll.
 
         Args:
-                poll (Poll): The poll to create an embed for.
+            poll: The poll to create an embed for.
         """
         super().__init__(
             poll.question,
@@ -59,7 +61,7 @@ class PollEmbed(PollEmbedBase):
     def option_prefixes(self) -> Generator[str, None, None]:
         return (f"{i}." for i in count(start=1))
 
-    def add_options(self):
+    def add_options(self) -> None:
         prefixes = self.option_prefixes()
         for i, option in enumerate(self.poll.options):
             self.add_field(
@@ -75,18 +77,18 @@ class PollEmbed(PollEmbedBase):
         index: int,
         option_votes: int,
         total_votes: int,
-        author_id: Optional[int] = None,
+        author_id: int | None = None,
     ) -> str:
         """Get the string which will show statistics for the votes for one particular option.
 
         Args:
-                index (int): The index of the option starting from 0.
-                option_votes (int): The number of votes for the option.
-                total_votes (int): The total number of votes for the poll.
-                author_id (Optional[int], optional): The ID of the user who added the option, or None if the option existed since the poll's creation. Default is None.
+            index: The index of the option starting from 0.
+            option_votes: The number of votes for the option.
+            total_votes: The total number of votes for the poll.
+            author_id: The ID of the user who added the option, or None if the option existed since the poll's creation. Default is None.
 
         Returns:
-                str: A string showing statistics for the votes for one option.
+            str: A string showing statistics for the votes for one option.
         """
         added_by = f"*Added by <@{author_id}>*\n" if author_id is not None else ""
         proportion = option_votes / total_votes if total_votes > 0 else 0
@@ -96,19 +98,19 @@ class PollEmbed(PollEmbedBase):
         )
         return f"{added_by}{bar}`{round(proportion*100)}% ({option_votes})`"
 
-    def add_details(self):
+    def add_details(self) -> None:
         """Add poll details to the end of the embed."""
         if self.details:
             self.add_field(name="---", value="\n".join(self.details), inline=False)
 
-    def closing_text(self, expires: Optional[datetime]) -> str:
+    def closing_text(self, expires: datetime | None) -> str:
         """Some text describing when the poll will expire.
 
         Args:
-                expires (Optional[datetime]): The time when the poll will expire. If None, the poll does not expire.
+            expires: The time when the poll will expire. If None, the poll does not expire.
 
         Returns:
-                str: A string describing when the poll will expire.
+            A string describing when the poll will expire.
         """
         if expires is None:
             return "♾️ This poll will never expire."
@@ -125,5 +127,5 @@ class PollEmbed(PollEmbedBase):
     def voters_text(self, voters: Iterable[Mention]) -> str:
         return f"🗳️ {mentions_str(voters)} may vote."
 
-    def multiple_votes_text(self, allow_multiple_votes: bool) -> Optional[str]:
+    def multiple_votes_text(self, allow_multiple_votes: bool) -> str | None:
         return "🔢 You may vote for multiple options." if allow_multiple_votes else None

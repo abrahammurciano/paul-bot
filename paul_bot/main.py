@@ -1,8 +1,10 @@
 import asyncio
-import os
 import logging
+import os
+
 from discord_lumberjack.handlers import DiscordChannelHandler
 from dotenv import load_dotenv
+
 from . import application
 from .presentation.paul import Paul
 from .utils import EmbedLongMessageCreator
@@ -32,20 +34,19 @@ if dbg_channel := os.environ.get("DBG_CHANNEL"):
     )
 
 
-async def main():
+async def main() -> None:
     logger.info("Starting Paul...")
 
     # Connect to the database
     await application.init()
 
-    # empty space effectively disables prefix since discord strips trailing spaces
     bot = Paul()
 
     # Run Discord bot
     await bot.start(token)
 
 
-def _main():
+def _main() -> None:
     asyncio.run(main())
 
 

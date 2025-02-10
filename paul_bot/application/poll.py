@@ -1,9 +1,10 @@
 import asyncio
-import pytz
 import logging
-from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Iterable
+
 from disnake import Message
-from datetime import datetime
+
 from .. import data
 from .mention import Mention
 from .option import Option
@@ -18,11 +19,26 @@ class Poll:
     MAX_OPTIONS = 23
     MAX_OPTION_LENGTH = 251
 
+    __slots__ = (
+        "__poll_id",
+        "__question",
+        "__expires",
+        "__author_id",
+        "__allow_multiple_votes",
+        "__allowed_vote_viewers",
+        "__allowed_editors",
+        "__allowed_voters",
+        "__message_id",
+        "__channel_id",
+        "__closed",
+        "__options",
+    )
+
     def __init__(
         self,
-        poll_id: Optional[int],
+        poll_id: int | None,
         question: str,
-        expires: Optional[datetime],
+        expires: datetime | None,
         author_id: int,
         allow_multiple_votes: bool,
         allowed_vote_viewers: Iterable[Mention],
@@ -31,7 +47,7 @@ class Poll:
         message_id: int,
         channel_id: int,
         closed: bool,
-    ):
+    ) -> None:
         self.__poll_id = poll_id
         self.__question = question
         self.__expires = expires
@@ -61,12 +77,12 @@ class Poll:
         return self.__question
 
     @property
-    def options(self) -> Tuple[Option, ...]:
+    def options(self) -> tuple[Option, ...]:
         """The options of the poll that users can choose from."""
         return tuple(self.__options)
 
     @property
-    def expires(self) -> Optional[datetime]:
+    def expires(self) -> datetime | None:
         """The time when the poll no longer accepts votes, or None if it doesn't expire."""
         return self.__expires
 
@@ -77,28 +93,28 @@ class Poll:
 
     @property
     def allow_multiple_votes(self) -> bool:
-        """Whether or not the poll allowes a user to vote on multiple options."""
+        """Whether or not the poll allows a user to vote on multiple options."""
         return self.__allow_multiple_votes
 
     @property
-    def allowed_vote_viewers(self) -> Tuple[Mention, ...]:
+    def allowed_vote_viewers(self) -> tuple[Mention, ...]:
         """The mentions of the users or roles who are allowed to view people's votes."""
         return self.__allowed_vote_viewers
 
     @property
-    def allowed_editors(self) -> Tuple[Mention, ...]:
+    def allowed_editors(self) -> tuple[Mention, ...]:
         """The mentions of the users or roles who are allowed to add options to the poll."""
         return self.__allowed_editors
 
     @property
-    def allowed_voters(self) -> Tuple[Mention, ...]:
+    def allowed_voters(self) -> tuple[Mention, ...]:
         """The mentions of the users or roles who are allowed to vote on the poll."""
         return self.__allowed_voters
 
     @property
     def is_expired(self) -> bool:
         """True if the poll has expired, False otherwise."""
-        return self.expires is not None and self.expires < datetime.now(pytz.utc)
+        return self.expires is not None and self.expires < datetime.now(UTC)
 
     @property
     def is_opened(self) -> bool:
@@ -134,7 +150,7 @@ class Poll:
         self.add_option(option)
         return option
 
-    def close(self):
+    def close(self) -> None:
         """Close the poll.
 
         This function will mark it as closed and expired in the database and update the message accordingly.
@@ -142,19 +158,19 @@ class Poll:
         Args:
             bot: The bot to use to update the message.
         """
-        now = datetime.now(pytz.utc)
+        now = datetime.now(UTC)
         if not self.is_expired:
             self.__expires = now
         asyncio.create_task(data.cruds.polls_crud.update_expiry(self, now, closed=True))
 
-    def delete(self):
+    def delete(self) -> None:
         """Delete the poll from the database.
 
         This function will delete the poll from the database and remove the message from the channel.
         """
         asyncio.create_task(data.cruds.polls_crud.delete(self.poll_id))
 
-    def remove_votes_from(self, voter_id: int):
+    def remove_votes_from(self, voter_id: int) -> None:
         """Remove all votes from the given user on this poll.
 
         Args:
@@ -166,7 +182,7 @@ class Poll:
         for option in self.options:
             option.remove_vote(voter_id)
 
-    def add_option(self, option: Option):
+    def add_option(self, option: Option) -> None:
         """Add option objects to the poll."""
         self.__options.append(option)
 
@@ -216,10 +232,10 @@ class Poll:
         return poll
 
     @classmethod
-    async def fetch_polls(cls) -> set["Poll"]:
+    async def fetch_polls(cls) -> Iterable["Poll"]:
         """Get all the polls from the database.
 
         Returns:
-                set[Poll]:	A set of Poll objects.
+            An iterable of Poll objects.
         """
         return await data.cruds.polls_crud.fetch_all()

@@ -1,10 +1,11 @@
 from disnake import Embed
-from .colours import get_colour
+
 from ...application.option import Option
+from .colours import get_colour
 
 
 class SeeOptionResultsEmbed(Embed):
-    def __init__(self, option: Option, index: int):
+    def __init__(self, option: Option, index: int) -> None:
         mentions = " ".join(f"<@{member_id}>" for member_id in option.votes)
         super().__init__(
             colour=get_colour(index).colour,

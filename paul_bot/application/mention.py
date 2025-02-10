@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Iterable, Union
+
 import disnake
 
 
@@ -12,10 +13,10 @@ class Mention:
         """Check if this mention mentions the given member or any of their roles.
 
         Args:
-                member (Union[disnake.User, disnake.Member]): The member to check.
+            member: The member to check.
 
         Returns:
-                bool: Whether this mention includes the given member.
+            Whether this mention includes the given member.
         """
         return self.mentioned_id == member.id or (
             isinstance(member, disnake.Member)

@@ -1,9 +1,10 @@
 import asyncio
-from typing import Iterable, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
+
 from .. import data
 
 if TYPE_CHECKING:
-    from application.poll import Poll
+    from paul_bot.application.poll import Poll
 
 
 class Option:
@@ -11,12 +12,12 @@ class Option:
 
     def __init__(
         self,
-        option_id: Optional[int],
+        option_id: int | None,
         label: str,
         votes: Iterable[int],
         poll: "Poll",
         index: int,
-        author_id: Optional[int],
+        author_id: int | None,
     ):
         self.__option_id = option_id
         self.__label = label
@@ -56,7 +57,7 @@ class Option:
         return self.__index
 
     @property
-    def author_id(self) -> Optional[int]:
+    def author_id(self) -> int | None:
         """The ID of the member who added the option, or None if the option existed from poll creation."""
         return self.__author_id
 
@@ -65,7 +66,7 @@ class Option:
         """Get the number of votes for this option."""
         return len(self.__votes)
 
-    def remove_vote(self, voter_id: int):
+    def remove_vote(self, voter_id: int) -> None:
         """Remove a vote from the given user on this option. If no such vote exists, nothing happens.
 
         This method does not remove the vote from the database. To remove the vote from the database, use the `delete_vote` method.
@@ -75,7 +76,7 @@ class Option:
         """
         self.__votes.discard(voter_id)
 
-    def delete_vote(self, voter_id: int):
+    def delete_vote(self, voter_id: int) -> None:
         """Delete a vote from the given user on this option. If no such vote exists, nothing happens.
 
         This method deletes the vote from the database. To remove the vote from the option without affecting the database (for example if the vote has already been removed from the database), use the `remove_vote` method instead.
@@ -90,7 +91,7 @@ class Option:
         )
         self.remove_vote(voter_id)
 
-    def add_vote(self, voter_id: int):
+    def add_vote(self, voter_id: int) -> None:
         """Add a vote from the given user on this option. If such a vote already exists, nothing happens. If the poll cannot have more than one vote per user, all other votes from this user are removed.
 
         Args:
@@ -101,7 +102,7 @@ class Option:
         asyncio.create_task(data.cruds.votes_crud.add(self.option_id, voter_id))
         self.__votes.add(voter_id)
 
-    def toggle_vote(self, voter_id: int):
+    def toggle_vote(self, voter_id: int) -> None:
         """Toggle a user's vote on this option. If adding their vote would cause too many votes from the same user, the rest of their votes are removed.
 
         Args:
@@ -114,7 +115,7 @@ class Option:
 
     @classmethod
     async def create_option(
-        cls, label: str, poll: "Poll", author_id: Optional[int] = None
+        cls, label: str, poll: "Poll", author_id: int | None = None
     ) -> "Option":
         """Create a new option for the given poll and add it to the database.
 
@@ -133,7 +134,7 @@ class Option:
         cls,
         labels: Iterable[str],
         poll: "Poll",
-        author_id: Optional[int] = None,
+        author_id: int | None = None,
     ) -> list["Option"]:
         """Create new Option objects for the given poll and add them to the database.
 

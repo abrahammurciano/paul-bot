@@ -1,24 +1,26 @@
-import asyncpg
 from typing import Iterable, Mapping
+
+import asyncpg
+
+from ..application.option import Option
 from . import sql
 from .cruds import Crud
-from ..application.option import Option
 
 
 class OptionsCrud(Crud):
-    def __init__(self, pool: asyncpg.pool.Pool):
+    def __init__(self, pool: asyncpg.pool.Pool) -> None:
         super().__init__(pool)
 
     async def add(self, options: Iterable[Option]) -> Mapping[int, int]:
         """Adds options of a poll to the database.
 
         Args:
-                labels (Iterable[str]): The labels of the options.
-                poll (Poll): The poll the options belong to.
-                author_id (Optional[int]): The ID of the person who added the option. If this option existed since the poll's creation, this should be None. (Default is None)
+            labels: The labels of the options.
+            poll: The poll the options belong to.
+            author_id: The ID of the person who added the option. If this option existed since the poll's creation, this should be None. (Default is None)
 
         Returns:
-                Mapping[int, int]: A mapping of the option index to the option's ID as assigned by the database.
+            A mapping of the option index to the option's ID as assigned by the database.
         """
         records = await sql.insert.many(
             self.pool,

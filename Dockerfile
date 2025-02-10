@@ -1,7 +1,5 @@
-FROM python:3.11
-RUN pip install poetry
+FROM ghcr.io/astral-sh/uv:python3.13-alpine
 WORKDIR /code
 COPY . /code/
-RUN poetry config virtualenvs.create false
-RUN poetry install --only main --no-interaction --no-ansi
-CMD ["python", "-m", "paul_bot"]
+RUN apk add --no-cache gcc linux-headers musl-dev python3-dev && uv sync --frozen
+CMD ["uv", "run", "paul"]

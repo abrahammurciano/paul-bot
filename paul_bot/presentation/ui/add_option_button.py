@@ -1,11 +1,13 @@
 import logging
 from typing import TYPE_CHECKING
+
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
-from .add_option_modal import AddOptionModal
-from .poll_action_button import PollActionButton
+
 from ...application.mention import mentions_str
 from ...application.poll import Poll
+from .add_option_modal import AddOptionModal
+from .poll_action_button import PollActionButton
 
 if TYPE_CHECKING:
     from paul_bot import Paul
@@ -14,15 +16,15 @@ logger = logging.getLogger(__name__)
 
 
 class AddOptionButton(PollActionButton):
-    def __init__(self, bot: "Paul", poll: Poll):
+    def __init__(self, bot: "Paul", poll: Poll) -> None:
         """Construct a Button used to vote for an option.
 
         Args:
-                bot (Paul): The bot instance.
-                poll (Poll): The poll to add options to when this button gets clicked.
+            bot: The bot instance.
+            poll: The poll to add options to when this button gets clicked.
         """
 
-        async def add_option(inter: MessageInteraction):
+        async def add_option(inter: MessageInteraction) -> None:
             logger.debug(
                 f"{inter.author.display_name} wants to add an option to poll"
                 f" {poll.question}."

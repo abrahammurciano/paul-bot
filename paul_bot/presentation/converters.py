@@ -1,12 +1,13 @@
-from typing import Callable, Optional
-from disnake.interactions import ApplicationCommandInteraction as Interaction
-import pytz
-from datetime import datetime
-import dateparser
-import re
 import logging
+import re
+from datetime import UTC, datetime
+from typing import Callable
+
+import dateparser
+from disnake.interactions import ApplicationCommandInteraction as Interaction
+
+from ..application import Mention, Poll
 from .errors import FriendlyError
-from ..application import Poll, Mention
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ def parse_options(sep: str = "|") -> Callable[[Interaction, str], list[str]]:
 RELATIVE_DATE_PARSE_FIX = re.compile(r"([dhms])(\d)")
 
 
-def parse_expires(inter: Interaction, expires: str) -> Optional[datetime]:
+def parse_expires(inter: Interaction, expires: str) -> datetime | None:
     # Workaround for https://github.com/scrapinghub/dateparser/issues/1012
     if expires.lower() == "never":
         return None
@@ -56,7 +57,7 @@ def parse_expires(inter: Interaction, expires: str) -> Optional[datetime]:
     if result is None:
         raise FriendlyError(f'Could not parse "{expires}" as a date/time.', inter)
     return (
-        result.replace(tzinfo=pytz.utc)
+        result.replace(tzinfo=UTC)
         if result.tzinfo is None or result.tzinfo.utcoffset(result) is None
         else result
     )
@@ -77,7 +78,7 @@ def parse_mentions(inter: Interaction, string: str) -> list[Mention]:
     ]
 
 
-def length_bound_str(max: int, min: int = 0):
+def length_bound_str(max: int, min: int = 0) -> Callable[[Interaction, str], str]:
     def converter(inter: Interaction, string: str) -> str:
         if len(string) > max or len(string) < min:
             raise FriendlyError(

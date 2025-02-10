@@ -1,11 +1,13 @@
+from typing import Callable, Coroutine, Iterable
+
 import disnake
-from typing import Callable, Coroutine, Iterable, Optional, Union
 from disnake.emoji import Emoji
 from disnake.enums import ButtonStyle
 from disnake.interactions import MessageInteraction
 from disnake.partial_emoji import PartialEmoji
-from ..errors import FriendlyError
+
 from ...application.mention import Mention, mentions_str
+from ..errors import FriendlyError
 
 
 class PollActionButton(disnake.ui.Button):
@@ -16,9 +18,9 @@ class PollActionButton(disnake.ui.Button):
         style: ButtonStyle,
         label: str,
         custom_id: str,
-        emoji: Optional[Union[str, Emoji, PartialEmoji]] = None,
-        row: Optional[int] = None,
-        no_permission_message: Optional[str] = None,
+        emoji: str | Emoji | PartialEmoji | None = None,
+        row: int | None = None,
+        no_permission_message: str | None = None,
     ):
         super().__init__(
             style=style, label=label, custom_id=custom_id, emoji=emoji, row=row
@@ -30,7 +32,7 @@ class PollActionButton(disnake.ui.Button):
         )
         self.__action = action
 
-    async def callback(self, inter: MessageInteraction):
+    async def callback(self, inter: MessageInteraction) -> None:
         if any(
             mention.includes_member(inter.author) for mention in self.__allowed_clickers
         ):

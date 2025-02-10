@@ -1,24 +1,26 @@
 from typing import TYPE_CHECKING
+
 from disnake.enums import ButtonStyle
 from disnake.interactions.message import MessageInteraction
-from .poll_action_button import PollActionButton
+
 from ...application.mention import mentions_str
 from ...application.option import Option
+from .poll_action_button import PollActionButton
 
 if TYPE_CHECKING:
     from paul_bot import Paul
 
 
 class VoteButton(PollActionButton):
-    def __init__(self, bot: "Paul", option: Option):
+    def __init__(self, bot: "Paul", option: Option) -> None:
         """Construct a Button used to vote for an option.
 
         Args:
-                bot (Paul): The bot instance.
-                option (Option): The option to vote for when this button is pressed.
+            bot: The bot instance.
+            option: The option to vote for when this button is pressed.
         """
 
-        async def vote(inter: MessageInteraction):
+        async def vote(inter: MessageInteraction) -> None:
             await inter.response.defer()
             await bot.toggle_vote(option, inter.author.id)
 
