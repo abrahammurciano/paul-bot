@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, AsyncIterator, Iterable
 
 from disnake import Message
 
@@ -117,9 +117,9 @@ class Poll:
         return self.expires is not None and self.expires < datetime.now(UTC)
 
     @property
-    def is_opened(self) -> bool:
-        """True if the poll is still opened (if the vote buttons are showing), False otherwise."""
-        return not self.__closed
+    def closed(self) -> bool:
+        """True if the poll is closed (not accepting votes), False otherwise."""
+        return self.__closed
 
     @property
     def vote_count(self) -> int:
@@ -232,10 +232,10 @@ class Poll:
         return poll
 
     @classmethod
-    async def fetch_polls(cls) -> Iterable["Poll"]:
+    def fetch_polls(cls) -> AsyncIterator["Poll"]:
         """Get all the polls from the database.
 
         Returns:
             An iterable of Poll objects.
         """
-        return await data.cruds.polls_crud.fetch_all()
+        return data.cruds.polls_crud.fetch_all()

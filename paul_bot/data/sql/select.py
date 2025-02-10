@@ -1,4 +1,4 @@
-from typing import Any, Coroutine, Iterable, Protocol
+from typing import Any, AsyncIterator, Iterable, cast
 
 import asyncpg
 
@@ -7,7 +7,7 @@ from . import util
 
 async def many(
     pool: asyncpg.Pool, table: str, columns: Iterable[str] = ("*",), **conditions: Any
-) -> list[asyncpg.Record]:
+) -> AsyncIterator[asyncpg.Record]:
     """Select all rows in a table matching the kwargs `conditions`.
 
     For security reasons it is important that the only user input passed into this function is via the values of `**conditions`.
@@ -19,9 +19,14 @@ async def many(
         **conditions: Keyword arguments specifying constraints on the select statement. For a kwarg A=B, the select statement will only match rows where the column named A has the value B.
 
     Returns:
-        A list of the records in the table.
+        An async generator yielding the selected rows.
     """
-    return await __select(table, columns, pool.fetch, **conditions)
+    query, values = __build_query(table, columns, **conditions)
+    async with pool.acquire() as connection:
+        conn = cast(asyncpg.Connection, connection)
+        async with conn.transaction(readonly=True):
+            async for record in conn.cursor(query, *values):
+                yield record
 
 
 async def one(
@@ -40,7 +45,8 @@ async def one(
     Returns:
         The selected row if one was found, or None otherwise.
     """
-    return await __select(table, columns, pool.fetchrow, **conditions)
+    query, values = __build_query(table, columns, **conditions)
+    return await pool.fetchrow(query, *values)
 
 
 async def value(
@@ -59,16 +65,13 @@ async def value(
     Returns:
         The value of the selected cell if one was found, or None otherwise.
     """
-    return await __select(table, (column,), pool.fetchval, **conditions)
+    query, values = __build_query(table, (column,), **conditions)
+    return await pool.fetchval(query, *values)
 
 
-class Fetcher[T](Protocol):
-    def __call__(self, query: str, *values: Any) -> Coroutine[Any, Any, T]: ...
-
-
-async def __select[
-    T
-](table: str, columns: Iterable[str], fetcher: Fetcher[T], **conditions) -> T:
+def __build_query(
+    table: str, columns: Iterable[str], **conditions: Any
+) -> tuple[str, tuple[Any, ...]]:
     filtered_columns, values = util.split_dict(conditions)
     query = f"SELECT {', '.join(columns)} FROM {table}{util.where(filtered_columns)}"
-    return await fetcher(query, *values)
+    return query, values

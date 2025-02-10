@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from disnake.interactions import ModalInteraction
 from disnake.ui import TextInput
@@ -28,6 +28,7 @@ class AddOptionModal(ErrorHandlingModal):
             ),
         )
 
+    @override
     async def callback(self, interaction: ModalInteraction) -> None:
         new_option = interaction.text_values[f"{self.__poll.poll_id} add_option_input"]
         await self.__bot.add_poll_option(

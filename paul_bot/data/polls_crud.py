@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, AsyncIterator, Iterable
 
 import asyncpg
 
@@ -64,16 +64,9 @@ class PollsCrud(Crud):
             on_conflict="DO NOTHING",
         )
 
-    async def fetch_all(self) -> Iterable["Poll"]:
-        """Get all the polls from the database.
-
-        Args:
-            pool: The connection pool to use to fetch the polls.
-
-        Returns:
-            An iterable of Poll objects.
-        """
-        records = await sql.select.many(
+    def fetch_all(self) -> AsyncIterator["Poll"]:
+        """Get an async iterator over all the polls from the database."""
+        records = sql.select.many(
             self.pool,
             "polls_extended_view",
             (
@@ -91,7 +84,7 @@ class PollsCrud(Crud):
                 "allowed_voters",
             ),
         )
-        return (self.__init_poll(r) for r in records)
+        return (self.__init_poll(r) async for r in records)
 
     async def update_expiry(
         self, poll: "Poll", expires: datetime, closed: bool

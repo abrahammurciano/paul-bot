@@ -17,6 +17,7 @@ from disnake.message import Message
 
 from ..application import Mention, Poll
 from ..application.option import Option
+from .close_queue import CloseQueue
 from .command_params import PollCommandParams
 from .converters import length_bound_str, parse_expires, parse_mentions, parse_options
 from .embeds.poll_closed_embed import PollClosedEmbed
@@ -35,11 +36,13 @@ class Paul(InteractionBot):
         self.__closed_poll_count = 0
         self.__activity_name = ""
         self.__on_ready_triggered = False
+        self.__close_queue = CloseQueue()
 
         @self.event
         async def on_ready() -> None:
             if not self.__on_ready_triggered:
                 logger.info(f"\n{self.user.name} has connected to Discord!\n")
+                asyncio.create_task(self.__poll_close_task())
                 await self.__load_polls()
                 await self.__set_presence()
                 self.__on_ready_triggered = True
@@ -56,18 +59,12 @@ class Paul(InteractionBot):
                 desc="Ask a question...", converter=length_bound_str(254)
             ),
             options: Iterable[str] = Param(
-                desc=(
-                    "Separate each option with a pipe (|). By default the options are"
-                    " yes or no."
-                ),
+                desc="Separate each option with a pipe (|). By default the options are yes or no.",
                 converter=parse_options(sep="|"),
                 default=("Yes", "No"),
             ),
             expires: datetime | None = Param(
-                desc=(
-                    "When to stop accepting votes, e.g. 1h20m or 1pm UTC+2. Default"
-                    " timezone is UTC. Default is 30 days."
-                ),
+                desc="When to stop accepting votes, e.g. 1h20m or 1pm UTC+2. Default timezone is UTC. Default is 30 days.",
                 converter=parse_expires,
                 default=lambda _: datetime.now(UTC) + timedelta(days=30),
             ),
@@ -75,18 +72,12 @@ class Paul(InteractionBot):
                 desc="Can a user choose multiple options?", default=False
             ),
             allowed_vote_viewers: list[Mention] = Param(
-                desc=(
-                    "Mention members or roles who can view the votes. Default is no"
-                    " one."
-                ),
+                desc="Mention members or roles who can view the votes. Default is no one.",
                 default=[],
                 converter=parse_mentions,
             ),
             allowed_editors: list[Mention] = Param(
-                desc=(
-                    "Mention members or roles who may add options to the poll. Default"
-                    " is only you."
-                ),
+                desc="Mention members or roles who may add options to the poll. Default is only you.",
                 default=lambda inter: [Mention("@", inter.author.id)],
                 converter=parse_mentions,
             ),
@@ -121,16 +112,11 @@ class Paul(InteractionBot):
             await self.new_poll(params, inter.author.id, message)
             logger.debug(f"{inter.author.name} successfully created a poll {question}.")
 
-    async def close_poll_now(self, poll: Poll, message: Message | None = None) -> None:
-        """Close a poll immediately.
-
-        Args:
-            poll: The poll to close.
-            message: The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
-        """
+    async def close_poll_now(self, poll: Poll) -> None:
+        """Close a poll immediately."""
         logger.debug(f"Closing poll {poll.question}.")
         poll.close()
-        await self.__update_poll_message(poll, message)
+        await self.__update_poll_message(poll)
         self.__closed_poll_count += 1
         await self.__set_presence()
 
@@ -142,17 +128,11 @@ class Paul(InteractionBot):
             self.__total_poll_count += 1
             await self.__update_poll_message(poll, message)
             await self.__set_presence()
-            asyncio.create_task(self.__poll_close_task(poll))
+            self.__close_queue.add(poll)
         except RuntimeError as e:
             await message.edit(
                 embed=PollEmbedBase(
-                    "Something went wrong...",
-                    f'"{params.question}" could not be created. Please try'
-                    f" again.\n\n**Reason:** {e}\n\nIf the problem persists,"
-                    " please open an issue on"
-                    " [GitHub](https://github.com/abrahammurciano/paul-bot) or ask for"
-                    " help on the [Discord"
-                    " Server](https://discord.com/invite/mzhSRnnY78).",
+                    f'Something went wrong... "{params.question}" could not be created. Please try again.\n\n**Reason:** {e}\n\nIf the problem persists, please open an issue on [GitHub](https://github.com/abrahammurciano/paul-bot) or ask for help on the [Discord Server](https://discord.com/invite/mzhSRnnY78).',
                 )
             )
 
@@ -186,32 +166,20 @@ class Paul(InteractionBot):
     async def __load_polls(self) -> None:
         """Fetch the polls from the database and set up the bot to react to poll interactions."""
         start = datetime.now()
-        for poll in await Poll.fetch_polls():
+        async for poll in Poll.fetch_polls():
             self.__total_poll_count += 1
-            if poll.is_opened:
-                asyncio.create_task(self.__poll_close_task(poll))
-            else:
+            if poll.closed:
                 self.__closed_poll_count += 1
+            self.__close_queue.add(poll)
             self.add_view(PollView(self, poll))
         logger.info(
             f"Finished loading {self.__total_poll_count} polls. ({(datetime.now() - start).seconds}s, {psutil.virtual_memory().percent}% memory used, {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB by Paul)"
         )
 
-    async def __poll_close_task(
-        self, poll: Poll, message: Message | None = None
-    ) -> None:
-        """Close a poll at a specific time.
-
-        This function blocks until the poll is closed if awaited, so you probably want to make it run in the background instead.
-
-        Args:
-            poll: The poll to close.
-            message: The message that triggered the poll to close. If omitted, it will be fetched from Discord's API.
-        """
-        if poll.expires is None:
-            return
-        await asyncio.sleep((poll.expires - datetime.now(UTC)).total_seconds())
-        await self.close_poll_now(poll, message)
+    async def __poll_close_task(self) -> None:
+        """Iterate over the polls in expiration order closing them as they expire."""
+        while True:
+            asyncio.create_task(self.close_poll_now(await self.__close_queue.wait()))
 
     async def __update_poll_message(self, poll: Poll, message: Message | None = None):
         """Update the poll's message. This should be called after a poll changes.
@@ -236,10 +204,7 @@ class Paul(InteractionBot):
 
     async def __set_presence(self) -> None:
         active_polls = self.__total_poll_count - self.__closed_poll_count
-        activity_name = (
-            f"/poll. {active_polls} active, {self.__total_poll_count} total."
-            f" ({len(self.guilds)} servers)"
-        )
+        activity_name = f"/poll. {active_polls} active, {self.__total_poll_count} total. ({len(self.guilds)} servers)"
         if activity_name != self.__activity_name:
             activity = disnake.Activity(name=activity_name, type=ActivityType.listening)
             await self.change_presence(activity=activity)

@@ -11,6 +11,7 @@ dependencies = [
 	"discord-lumberjack>=1.0",
 	"python-dotenv>=0.19",
 	"psutil>=6.1.1",
+	"typed-data-structures>=0.0.2",
 ]
 
 [project.scripts]

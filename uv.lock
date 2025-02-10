@@ -305,6 +305,7 @@ dependencies = [
     { name = "disnake" },
     { name = "psutil" },
     { name = "python-dotenv" },
+    { name = "typed-data-structures" },
 ]
 
 [package.dev-dependencies]
@@ -323,6 +324,7 @@ requires-dist = [
     { name = "disnake", specifier = ">=2.4" },
     { name = "psutil", specifier = ">=6.1.1" },
     { name = "python-dotenv", specifier = ">=0.19" },
+    { name = "typed-data-structures", specifier = ">=0.0.2" },
 ]
 
 [package.metadata.requires-dev]
@@ -457,6 +459,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050 },
+]
+
+[[package]]
+name = "typed-data-structures"
+version = "0.0.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/70/d0/c62baedca2e420d56a2520efd369cd745332a447f45ac5052b011641f8ff/typed-data-structures-0.0.2.tar.gz", hash = "sha256:c7933d7fdebbcb25be7010fcc006b8d76bd135ea11574cfc96488dc62a2e6b08", size = 3596 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/35/0c37685413099cdc8dae3ae2a3b949d26b39e27af1290fbc615ec45e78a7/typed_data_structures-0.0.2-py3-none-any.whl", hash = "sha256:b5fff1569d79f5fd6b8f8e80e525edafeff8eaf1205a05f2c10a21126126214e", size = 4878 },
 ]
 
 [[package]]

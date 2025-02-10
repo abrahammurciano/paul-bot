@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 class ClosePollButton(PollActionButton):
     def __init__(self, bot: "Paul", poll: Poll) -> None:
         async def close_poll(inter: MessageInteraction) -> None:
-            await bot.close_poll_now(poll)
             await inter.response.defer()
+            await bot.close_poll_now(poll)
 
         author_mention = Mention("@", poll.author_id)
         super().__init__(
@@ -25,8 +25,5 @@ class ClosePollButton(PollActionButton):
             label="Close Poll",
             custom_id=f"{poll.poll_id} close",
             row=4,
-            no_permission_message=(
-                f"You do not have permission to close the poll. Only {author_mention}"
-                " may do that."
-            ),
+            no_permission_message=f"You do not have permission to close the poll. Only {author_mention} may do that.",
         )
