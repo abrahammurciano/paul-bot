@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, AsyncIterator, Iterable
 
@@ -10,6 +11,8 @@ from .cruds import Crud
 
 if TYPE_CHECKING:
     from paul_bot.application.poll import Poll
+
+logger = logging.getLogger(__name__)
 
 
 class PollsCrud(Crud):
@@ -64,7 +67,7 @@ class PollsCrud(Crud):
             on_conflict="DO NOTHING",
         )
 
-    def fetch_all(self) -> AsyncIterator["Poll"]:
+    async def fetch_all(self) -> AsyncIterator["Poll"]:
         """Get an async iterator over all the polls from the database."""
         records = sql.select.many(
             self.pool,
@@ -84,7 +87,11 @@ class PollsCrud(Crud):
                 "allowed_voters",
             ),
         )
-        return (self.__init_poll(r) async for r in records)
+        async for r in records:
+            try:
+                yield self.__init_poll(r)
+            except Exception as e:
+                logger.exception(f"Failed to load poll: {e}")
 
     async def update_expiry(
         self, poll: "Poll", expires: datetime, closed: bool

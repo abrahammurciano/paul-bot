@@ -43,6 +43,7 @@ class Paul(InteractionBot):
             if not self.__on_ready_triggered:
                 logger.info(f"\n{self.user.name} has connected to Discord!\n")
                 asyncio.create_task(self.__poll_close_task())
+                await self.__set_loading_presence()
                 await self.__load_polls()
                 await self.__set_presence()
                 self.__on_ready_triggered = True
@@ -209,6 +210,10 @@ class Paul(InteractionBot):
             activity = disnake.Activity(name=activity_name, type=ActivityType.listening)
             await self.change_presence(activity=activity)
             self.__activity_name = activity_name
+
+    async def __set_loading_presence(self) -> None:
+        activity = disnake.CustomActivity(name="Loading...", type=ActivityType.watching)
+        await self.change_presence(activity=activity, status=disnake.Status.dnd)
 
     @override
     async def on_error(self, event_name: str, *args, **kwargs) -> None:
