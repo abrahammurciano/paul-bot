@@ -168,12 +168,15 @@ class Paul(InteractionBot):
     async def __load_polls(self) -> None:
         """Fetch the polls from the database and set up the bot to react to poll interactions."""
         start = datetime.now()
+        to_close = []
         async for poll in Poll.fetch_polls():
             self.__loaded_poll_count += 1
             if poll.closed:
                 self.__closed_poll_count += 1
-            self.__close_queue.add(poll)
+            else:
+                to_close.append(poll)
             self.add_view(PollView(self, poll))
+        self.__close_queue.add_many(to_close)
         self.__loading = False
         logger.info(
             f"Finished loading {self.__loaded_poll_count} polls. ({(datetime.now() - start).seconds}s, {psutil.virtual_memory().percent}% memory used, {psutil.Process().memory_info().rss / 1024 ** 2:.2f} MB by Paul)"
@@ -220,7 +223,8 @@ class Paul(InteractionBot):
         while self.__loading:
             percent = self.__loaded_poll_count / total * 100
             activity = disnake.CustomActivity(
-                name=f"Loading... {percent:.0f}%", type=ActivityType.watching
+                name=f"Loading... {percent:.0f}% ({self.__loaded_poll_count} / {total})",
+                type=ActivityType.watching,
             )
             await self.change_presence(activity=activity, status=disnake.Status.dnd)
             await asyncio.sleep(5)
