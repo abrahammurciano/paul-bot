@@ -226,6 +226,8 @@ async def on_button_click(inter: MessageInteraction[InteractionBot]):
     try:
         button = await buttons.factory(paul, inter)
         await button.callback(inter)
+    except FriendlyError as e:
+        await e.send()
     except NotFound as e:
         if "unknown interaction" in str(e).lower():
             logger.warning(
