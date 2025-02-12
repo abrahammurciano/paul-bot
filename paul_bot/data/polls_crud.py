@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, AsyncIterator, Iterable
+from typing import TYPE_CHECKING, Any, Iterable
 
 import asyncpg
 
@@ -98,15 +98,6 @@ class PollsCrud(Crud):
             option_id,
         )
         return self.__init_poll(record) if record else None
-
-    async def fetch_all(self) -> AsyncIterator[Poll]:
-        """Get an async iterator over all the polls from the database."""
-        records = sql.select.many(self.pool, self._VIEW, self._COLUMNS)
-        async for r in records:
-            try:
-                yield self.__init_poll(r)
-            except Exception as e:
-                logger.exception(f"Failed to load poll: {e}")
 
     async def update_expiry(self, poll: Poll, expires: datetime, closed: bool) -> None:
         """Update the expiry date of a poll and set its closed status accordingly.

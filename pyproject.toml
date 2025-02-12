@@ -27,6 +27,7 @@ dev = [
     "mypy>=1.15.0",
     "types-dateparser>=1.2.0",
     "types-psutil>=6.1.0.20241221",
+    "vulture>=2.14",
 ]
 
 [[tool.mypy.overrides]]

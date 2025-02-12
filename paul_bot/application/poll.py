@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, AsyncIterator, Iterable
+from typing import TYPE_CHECKING, Any, Iterable
 
 from disnake import Message
 
@@ -261,15 +261,6 @@ class Poll:
         return next(
             (option for option in poll.options if option.option_id == option_id), None
         )
-
-    @classmethod
-    def fetch_polls(cls) -> AsyncIterator[Poll]:
-        """Get all the polls from the database.
-
-        Returns:
-            An iterable of Poll objects.
-        """
-        return data.cruds.polls_crud.fetch_all()
 
     @classmethod
     async def count(cls, **conditions: Any) -> int:

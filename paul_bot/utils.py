@@ -1,6 +1,6 @@
 from itertools import zip_longest
 from logging import LogRecord
-from typing import Iterable, TypeVar
+from typing import Iterable, TypeVar, override
 
 from discord_lumberjack.message_creators import EmbedMessageCreator
 
@@ -23,8 +23,10 @@ def chunks(
 
 
 class EmbedLongMessageCreator(EmbedMessageCreator):
+    @override
     def get_description(self, record: LogRecord) -> str:
         return f"**{super().get_title(record)}**"
 
+    @override
     def get_title(self, record: LogRecord) -> str:
         return ""
