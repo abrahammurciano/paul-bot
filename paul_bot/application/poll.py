@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, AsyncIterator, Iterable
+from typing import TYPE_CHECKING, Any, AsyncIterator, Iterable
 
 from disnake import Message
 
@@ -272,13 +272,16 @@ class Poll:
         return data.cruds.polls_crud.fetch_all()
 
     @classmethod
-    async def count(cls) -> int:
+    async def count(cls, **conditions: Any) -> int:
         """Get the number of polls in the database.
+
+        Args:
+            conditions: The conditions to filter the polls by.
 
         Returns:
             The number of polls.
         """
-        return await data.cruds.polls_crud.count()
+        return await data.cruds.polls_crud.count(**conditions)
 
     @classmethod
     async def next_to_expire(cls) -> Poll | None:

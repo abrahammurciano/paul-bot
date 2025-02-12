@@ -43,6 +43,7 @@ class Paul:
         logger.info(f"\n{self.__bot.user.name} has connected to Discord!\n")
         self.__close_queue.start()
         self.__total_poll_count = await Poll.count()
+        self.__closed_poll_count = await Poll.count(closed=True)
         await self.__update_presence()
 
     async def on_guild_join(self, guild: Guild) -> None:

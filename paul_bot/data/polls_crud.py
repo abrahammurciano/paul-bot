@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, AsyncIterator, Iterable
+from typing import TYPE_CHECKING, Any, AsyncIterator, Iterable
 
 import asyncpg
 
@@ -123,9 +123,13 @@ class PollsCrud(Crud):
             where={"id": poll.poll_id},
         )
 
-    async def count(self) -> int:
-        """Get the number of polls in the database."""
-        return await sql.select.value(self.pool, self._TABLE, "COUNT(*)")
+    async def count(self, **conditions: Any) -> int:
+        """Get the number of polls in the database.
+
+        Args:
+            conditions: The conditions to filter the polls by.
+        """
+        return await sql.select.value(self.pool, self._TABLE, "COUNT(*)", **conditions)
 
     async def __insert_permissions(
         self, table: str, mentions: Iterable[Mention], poll_id: int
