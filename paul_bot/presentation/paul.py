@@ -2,6 +2,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any, Iterable
 
+import psutil
 from disnake import Activity, ActivityType, Event, MessageInteraction
 from disnake.errors import Forbidden, NotFound
 from disnake.ext.commands.bot import InteractionBot
@@ -40,7 +41,9 @@ class Paul:
         if self.__on_ready_triggered:
             return
         self.__on_ready_triggered = True
-        logger.info(f"\n{self.__bot.user.name} has connected to Discord!\n")
+        logger.info(
+            f"\n{self.__bot.user.name} has connected to Discord! (mem: {psutil.Process().memory_info().rss // (1024*1024)} MB)\n"
+        )
         self.__close_queue.start()
         self.__total_poll_count = await Poll.count()
         self.__closed_poll_count = await Poll.count(closed=True)
