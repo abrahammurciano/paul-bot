@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, AsyncIterator, Iterable
@@ -16,10 +18,24 @@ logger = logging.getLogger(__name__)
 
 
 class PollsCrud(Crud):
-    def __init__(self, pool: asyncpg.pool.Pool) -> None:
-        super().__init__(pool)
+    _TABLE = "polls"
+    _VIEW = "polls_extended_view"
+    _COLUMNS = (
+        "id",
+        "question",
+        "expires",
+        "author",
+        "allow_multiple_votes",
+        "message",
+        "channel",
+        "closed",
+        "options",
+        "allowed_editors",
+        "allowed_vote_viewers",
+        "allowed_voters",
+    )
 
-    async def add(self, poll: "Poll") -> int:
+    async def add(self, poll: Poll) -> int:
         """Add a poll to the database.
 
         Args:
@@ -30,7 +46,7 @@ class PollsCrud(Crud):
         """
         poll_id: int = await sql.insert.one(
             self.pool,
-            "polls",
+            self._TABLE,
             returning="id",
             question=poll.question,
             author=poll.author_id,
@@ -56,35 +72,43 @@ class PollsCrud(Crud):
         """
         await sql.delete(self.pool, "polls", id=poll_id)
 
-    async def fetch_all(self) -> AsyncIterator["Poll"]:
-        """Get an async iterator over all the polls from the database."""
-        records = sql.select.many(
-            self.pool,
-            "polls_extended_view",
-            (
-                "id",
-                "question",
-                "expires",
-                "author",
-                "allow_multiple_votes",
-                "message",
-                "channel",
-                "closed",
-                "options",
-                "allowed_editors",
-                "allowed_vote_viewers",
-                "allowed_voters",
-            ),
+    async def fetch_by_id(self, poll_id: int) -> Poll | None:
+        """Get a poll from the database by its ID.
+
+        Args:
+            poll_id: The ID of the poll to fetch.
+
+        Returns:
+            The poll with the given ID.
+        """
+        record = await sql.select.one(self.pool, self._VIEW, self._COLUMNS, id=poll_id)
+        return self.__init_poll(record) if record else None
+
+    async def fetch_by_option_id(self, option_id: int) -> Poll | None:
+        """Get a poll from the database by an option ID.
+
+        Args:
+            option_id: The ID of the option to fetch the poll for.
+
+        Returns:
+            The poll containing the given option, if found.
+        """
+        record = await self.pool.fetchrow(
+            f"SELECT {', '.join(self._COLUMNS)} FROM {self._VIEW} WHERE id = (SELECT poll_id FROM options WHERE id = $1)",
+            option_id,
         )
+        return self.__init_poll(record) if record else None
+
+    async def fetch_all(self) -> AsyncIterator[Poll]:
+        """Get an async iterator over all the polls from the database."""
+        records = sql.select.many(self.pool, self._VIEW, self._COLUMNS)
         async for r in records:
             try:
                 yield self.__init_poll(r)
             except Exception as e:
                 logger.exception(f"Failed to load poll: {e}")
 
-    async def update_expiry(
-        self, poll: "Poll", expires: datetime, closed: bool
-    ) -> None:
+    async def update_expiry(self, poll: Poll, expires: datetime, closed: bool) -> None:
         """Update the expiry date of a poll and set its closed status accordingly.
 
         Args:
@@ -94,14 +118,14 @@ class PollsCrud(Crud):
         """
         await sql.update(
             self.pool,
-            "polls",
+            self._TABLE,
             set={"expires": expires, "closed": closed},
             where={"id": poll.poll_id},
         )
 
     async def count(self) -> int:
         """Get the number of polls in the database."""
-        return await sql.select.value(self.pool, "polls", "COUNT(*)")
+        return await sql.select.value(self.pool, self._TABLE, "COUNT(*)")
 
     async def __insert_permissions(
         self, table: str, mentions: Iterable[Mention], poll_id: int
@@ -114,9 +138,16 @@ class PollsCrud(Crud):
             on_conflict="DO NOTHING",
         )
 
+    async def next_to_expire(self) -> Poll | None:
+        """Get the poll that will expire next."""
+        record = await self.pool.fetchrow(
+            f"SELECT {', '.join(self._COLUMNS)} FROM {self._VIEW} WHERE expires IS NOT NULL AND NOT closed ORDER BY expires LIMIT 1"
+        )
+        return self.__init_poll(record) if record else None
+
     def __parse_options(
         self,
-        poll: "Poll",
+        poll: Poll,
         options: list[tuple[int, str, int | None, Iterable[int] | None, int]],
     ) -> list[Option]:
         """Construct a list of options for a poll given a list of tuples returned from the database.

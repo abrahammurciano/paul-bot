@@ -1,8 +1,6 @@
 import logging
 
-import disnake
-from disnake.interactions import Interaction, ModalInteraction
-from disnake.ui.item import Item
+from disnake.interactions import Interaction
 
 logger = logging.getLogger(__name__)
 
@@ -35,15 +33,3 @@ class FriendlyError(Exception):
             else self.inter.followup.send
         )
         await send(message, ephemeral=True)
-
-
-class ErrorHandlingView(disnake.ui.View):
-    async def on_error(
-        self, error: Exception, item: Item, interaction: Interaction
-    ) -> None:
-        await handle_error(error)
-
-
-class ErrorHandlingModal(disnake.ui.Modal):
-    async def on_error(self, error: Exception, interaction: ModalInteraction) -> None:
-        await handle_error(error)

@@ -6,7 +6,7 @@ from discord_lumberjack.handlers import DiscordChannelHandler
 from dotenv import load_dotenv
 
 from . import application
-from .presentation.paul import Paul
+from .presentation.paul import bot
 from .utils import EmbedLongMessageCreator
 
 load_dotenv()
@@ -36,13 +36,7 @@ if dbg_channel := os.environ.get("DBG_CHANNEL"):
 
 async def main() -> None:
     logger.info("Starting Paul...")
-
-    # Connect to the database
     await application.init()
-
-    bot = Paul()
-
-    # Run Discord bot
     await bot.start(token)
 
 

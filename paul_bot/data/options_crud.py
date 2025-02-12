@@ -1,16 +1,11 @@
 from typing import Iterable, Mapping
 
-import asyncpg
-
 from ..application.option import Option
 from . import sql
 from .cruds import Crud
 
 
 class OptionsCrud(Crud):
-    def __init__(self, pool: asyncpg.pool.Pool) -> None:
-        super().__init__(pool)
-
     async def add(self, options: Iterable[Option]) -> Mapping[int, int]:
         """Adds options of a poll to the database.
 

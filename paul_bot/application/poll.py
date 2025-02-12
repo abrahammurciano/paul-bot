@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 from datetime import UTC, datetime
@@ -158,10 +160,13 @@ class Poll:
         Args:
             bot: The bot to use to update the message.
         """
-        now = datetime.now(UTC)
         if not self.is_expired:
-            self.__expires = now
-        asyncio.create_task(data.cruds.polls_crud.update_expiry(self, now, closed=True))
+            self.__expires = datetime.now(UTC)
+        assert self.__expires is not None
+        self.__closed = True
+        asyncio.create_task(
+            data.cruds.polls_crud.update_expiry(self, self.__expires, closed=True)
+        )
 
     def delete(self) -> None:
         """Delete the poll from the database.
@@ -188,10 +193,7 @@ class Poll:
 
     @classmethod
     async def create_poll(
-        cls,
-        params: "PollCommandParams",
-        author_id: int,
-        message: Message,
+        cls, params: PollCommandParams, author_id: int, message: Message
     ) -> "Poll":
         """Create a new poll.
 
@@ -232,7 +234,36 @@ class Poll:
         return poll
 
     @classmethod
-    def fetch_polls(cls) -> AsyncIterator["Poll"]:
+    async def fetch_by_id(cls, poll_id: int) -> Poll | None:
+        """Get a poll by its ID.
+
+        Args:
+            poll_id: The ID of the poll to get.
+
+        Returns:
+            The poll with the given ID.
+        """
+        return await data.cruds.polls_crud.fetch_by_id(poll_id)
+
+    @classmethod
+    async def fetch_option(cls, option_id: int) -> Option | None:
+        """Get an option by its ID.
+
+        Args:
+            option_id: The ID of the option to get.
+
+        Returns:
+            The option with the given ID.
+        """
+        poll = await data.cruds.polls_crud.fetch_by_option_id(option_id)
+        if poll is None:
+            return None
+        return next(
+            (option for option in poll.options if option.option_id == option_id), None
+        )
+
+    @classmethod
+    def fetch_polls(cls) -> AsyncIterator[Poll]:
         """Get all the polls from the database.
 
         Returns:
@@ -248,3 +279,12 @@ class Poll:
             The number of polls.
         """
         return await data.cruds.polls_crud.count()
+
+    @classmethod
+    async def next_to_expire(cls) -> Poll | None:
+        """Get the poll that will expire next.
+
+        Returns:
+            The poll that will expire next.
+        """
+        return await data.cruds.polls_crud.next_to_expire()

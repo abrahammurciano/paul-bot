@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 from typing import TYPE_CHECKING, Iterable
 
@@ -15,7 +17,7 @@ class Option:
         option_id: int | None,
         label: str,
         votes: Iterable[int],
-        poll: "Poll",
+        poll: Poll,
         index: int,
         author_id: int | None,
     ):
@@ -31,8 +33,7 @@ class Option:
         """The id of the option."""
         if self.__option_id is None:
             raise ValueError(
-                "Option doesn't have an ID yet since it has not been added to the"
-                " database."
+                "Option doesn't have an ID yet since it has not been added to the database."
             )
         return self.__option_id
 
@@ -47,7 +48,7 @@ class Option:
         return self.__votes.copy()
 
     @property
-    def poll(self) -> "Poll":
+    def poll(self) -> Poll:
         """The Poll that the option belongs to."""
         return self.__poll
 
@@ -115,7 +116,7 @@ class Option:
 
     @classmethod
     async def create_option(
-        cls, label: str, poll: "Poll", author_id: int | None = None
+        cls, label: str, poll: Poll, author_id: int | None = None
     ) -> "Option":
         """Create a new option for the given poll and add it to the database.
 
@@ -133,7 +134,7 @@ class Option:
     async def create_options(
         cls,
         labels: Iterable[str],
-        poll: "Poll",
+        poll: Poll,
         author_id: int | None = None,
     ) -> list["Option"]:
         """Create new Option objects for the given poll and add them to the database.

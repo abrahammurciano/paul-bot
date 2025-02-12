@@ -63,19 +63,23 @@ def parse_expires(inter: Interaction, expires: str) -> datetime | None:
     )
 
 
-MENTION_REGEX = re.compile(r"<(@[!&])?(\d+)>")
+_MENTION_REGEX = re.compile(r"<(@[!&])?(\d+)>")
+_NAMED_MENTION_REGEX = re.compile(r"@[^!&@,\s][^\s,@<]*")
 
 
 def parse_mentions(inter: Interaction, string: str) -> list[Mention]:
-    string = (
-        string.replace("@everyone", f"<@&{inter.guild.default_role.id}>")
-        if inter.guild
-        else string
-    )
-    return [
+    result = []
+    result.extend(
         Mention(prefix, int(mention_id))
-        for prefix, mention_id in MENTION_REGEX.findall(string)
-    ]
+        for prefix, mention_id in _MENTION_REGEX.findall(string)
+    )
+    if inter.guild:
+        result.extend(
+            mention
+            for name in _NAMED_MENTION_REGEX.findall(string)
+            if (mention := Mention.named(name, inter.guild))
+        )
+    return result
 
 
 def length_bound_str(max: int, min: int = 0) -> Callable[[Interaction, str], str]:
