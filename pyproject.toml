@@ -31,9 +31,6 @@ dev = [
 	"vulture>=2.14",
 ]
 
-[[tool.uv.index]]
-url = "https://artifactory.sddc.mobileye.com/artifactory/api/pypi/pypi/simple"
-
 [[tool.mypy.overrides]]
 module = ["asyncpg"]
 ignore_missing_imports = true
