@@ -10,8 +10,8 @@ from disnake.interactions.message import MessageInteraction
 from paul_bot.application.mention import mentions_str
 from paul_bot.application.poll import Poll
 from paul_bot.presentation.errors import FriendlyError
+from paul_bot.presentation.ui.add_option_modal import AddOptionModal
 
-from ..add_option_modal import AddOptionModal
 from .base_button import BaseButton
 
 if TYPE_CHECKING:

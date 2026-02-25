@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-import asyncio
 import logging
+from collections.abc import Iterable
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any
 
 from disnake import Message
 
-from .. import data
+from paul_bot import data
+from paul_bot.utils import background
+
 from .mention import Mention
 from .option import Option
 
 if TYPE_CHECKING:
-    from ..presentation.command_params import PollCommandParams
+    from paul_bot.presentation.command_params import PollCommandParams
 
 logger = logging.getLogger(__name__)
 
@@ -22,22 +24,23 @@ class Poll:
     MAX_OPTION_LENGTH = 251
 
     __slots__ = (
-        "__poll_id",
-        "__question",
-        "__expires",
-        "__author_id",
         "__allow_multiple_votes",
-        "__allowed_vote_viewers",
         "__allowed_editors",
+        "__allowed_vote_viewers",
         "__allowed_voters",
-        "__message_id",
+        "__author_id",
         "__channel_id",
         "__closed",
+        "__expires",
+        "__message_id",
         "__options",
+        "__poll_id",
+        "__question",
     )
 
     def __init__(
         self,
+        *,
         poll_id: int | None,
         question: str,
         expires: datetime | None,
@@ -68,8 +71,7 @@ class Poll:
         """The id of the poll."""
         if self.__poll_id is None:
             raise ValueError(
-                "Poll doesn't have an ID yet since it has not been added to the"
-                " database."
+                "Poll doesn't have an ID yet since it has not been added to the database."
             )
         return self.__poll_id
 
@@ -164,7 +166,7 @@ class Poll:
             self.__expires = datetime.now(UTC)
         assert self.__expires is not None
         self.__closed = True
-        asyncio.create_task(
+        background(
             data.cruds.polls_crud.update_expiry(self, self.__expires, closed=True)
         )
 
@@ -173,7 +175,7 @@ class Poll:
 
         This function will delete the poll from the database and remove the message from the channel.
         """
-        asyncio.create_task(data.cruds.polls_crud.delete(self.poll_id))
+        background(data.cruds.polls_crud.delete(self.poll_id))
 
     def remove_votes_from(self, voter_id: int) -> None:
         """Remove all votes from the given user on this poll.
@@ -181,7 +183,7 @@ class Poll:
         Args:
             voter_id: The ID of the user whose votes should be removed.
         """
-        asyncio.create_task(
+        background(
             data.cruds.votes_crud.delete_users_votes_from_poll(self.poll_id, voter_id)
         )
         for option in self.options:
@@ -194,7 +196,7 @@ class Poll:
     @classmethod
     async def create_poll(
         cls, params: PollCommandParams, author_id: int, message: Message
-    ) -> "Poll":
+    ) -> Poll:
         """Create a new poll.
 
         Args:
@@ -209,25 +211,24 @@ class Poll:
             RuntimeError: If the poll's options could not be added.
         """
         poll = Poll(
-            None,
-            params.question,
-            params.expires,
-            author_id,
-            params.allow_multiple_votes,
-            params.allowed_vote_viewers,
-            params.allowed_editors,
-            params.allowed_voters,
-            message.id,
-            message.channel.id,
-            False,
+            poll_id=None,
+            question=params.question,
+            expires=params.expires,
+            author_id=author_id,
+            allow_multiple_votes=params.allow_multiple_votes,
+            allowed_vote_viewers=params.allowed_vote_viewers,
+            allowed_editors=params.allowed_editors,
+            allowed_voters=params.allowed_voters,
+            message_id=message.id,
+            channel_id=message.channel.id,
+            closed=False,
         )
         poll.__poll_id = await data.cruds.polls_crud.add(poll)
         for option in await Option.create_options(params.options, poll):
             poll.add_option(option)
         if not poll.options:
             logger.error(
-                f"Could not add options when creating poll {poll.poll_id}:"
-                f" {poll.question}. Given options: {params.options}"
+                f"Could not add options when creating poll {poll.poll_id}: {poll.question}. Given options: {params.options}"
             )
             poll.delete()
             raise RuntimeError("Could not options to the poll.")

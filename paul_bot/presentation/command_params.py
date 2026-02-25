@@ -1,8 +1,8 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable
 
-from ..application.mention import Mention
+from paul_bot.application.mention import Mention
 
 
 @dataclass(slots=True)

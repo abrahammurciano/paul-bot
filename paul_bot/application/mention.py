@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Self, Union
+from typing import Self, override
 
 import disnake
 import disnake.utils
@@ -59,7 +60,7 @@ class Mention:
             return cls(prefix="@&", mentioned_id=role.id)
         return None
 
-    def includes_member(self, member: Union[disnake.User, disnake.Member]) -> bool:
+    def includes_member(self, member: disnake.User | disnake.Member) -> bool:
         """Check if this mention mentions the given member or any of their roles.
 
         Args:
@@ -73,9 +74,11 @@ class Mention:
             and self.mentioned_id in (role.id for role in member.roles)
         )
 
+    @override
     def __str__(self) -> str:
         return f"<{self.prefix}{self.mentioned_id}>"
 
+    @override
     def __repr__(self) -> str:
         return f"<{self.prefix}{str(self.mentioned_id)[:3]}...{str(self.mentioned_id)[-3:]}>"
 

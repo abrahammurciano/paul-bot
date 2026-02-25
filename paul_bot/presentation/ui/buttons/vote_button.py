@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
+from disnake import Client
 from disnake.enums import ButtonStyle
+from disnake.ext.commands import InteractionBot
 from disnake.interactions.message import MessageInteraction
 
 from paul_bot.application.mention import mentions_str
@@ -32,7 +34,7 @@ class VoteButton(BaseButton):
             allowed_clickers=option.poll.allowed_voters,
             style=ButtonStyle.blurple,
             label=(
-                f"{str(option.index + 1)}. {option.label[:30]}{'...' if len(option.label) > 30 else ''}"
+                f"{option.index + 1!s}. {option.label[:30]}{'...' if len(option.label) > 30 else ''}"
             ),
             custom_id=str(option.option_id),
             emoji="🗳️",
@@ -41,7 +43,7 @@ class VoteButton(BaseButton):
     @override
     @classmethod
     async def from_interaction(
-        cls, paul: Paul, inter: MessageInteraction
+        cls, paul: Paul, inter: MessageInteraction[InteractionBot]
     ) -> VoteButton:
         option = await Poll.fetch_option(cls._parse_custom_id(inter))
         if option is None:
@@ -51,7 +53,7 @@ class VoteButton(BaseButton):
         return cls(paul, option)
 
     @override
-    async def _on_click(self, inter: MessageInteraction) -> None:
+    async def _on_click(self, inter: MessageInteraction[Client]) -> None:
         await inter.response.defer()
         await self.__paul.toggle_vote(self.__option, inter.author.id)
 

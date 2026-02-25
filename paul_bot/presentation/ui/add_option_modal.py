@@ -3,12 +3,12 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, override
 
+from disnake import Client
 from disnake.interactions import ModalInteraction
 from disnake.ui import Modal, TextInput
 
 from paul_bot.application.poll import Poll
-
-from ..errors import handle_error
+from paul_bot.presentation.errors import handle_error
 
 if TYPE_CHECKING:
     from paul_bot.presentation.paul import Paul
@@ -32,7 +32,7 @@ class AddOptionModal(Modal):
         )
 
     @override
-    async def callback(self, interaction: ModalInteraction) -> None:
+    async def callback(self, interaction: ModalInteraction[Client]) -> None:
         new_option = interaction.text_values[f"{self.__poll.poll_id} add_option_input"]
         await self.__paul.add_poll_option(
             self.__poll, new_option, interaction.author.id, interaction
@@ -42,5 +42,7 @@ class AddOptionModal(Modal):
         )
 
     @override
-    async def on_error(self, error: Exception, interaction: ModalInteraction) -> None:
+    async def on_error(
+        self, error: Exception, interaction: ModalInteraction[Client]
+    ) -> None:
         await handle_error(error)

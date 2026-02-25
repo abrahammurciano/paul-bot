@@ -1,4 +1,5 @@
-from typing import Any, AsyncIterator, Iterable, cast
+from collections.abc import AsyncIterator, Iterable
+from typing import Any, cast
 
 import asyncpg
 
@@ -22,10 +23,10 @@ async def many(
         An async generator yielding the selected rows.
     """
     query, values = __build_query(table, columns, **conditions)
-    async with pool.acquire() as connection:
+    async with pool.acquire() as connection:  # pyright: ignore[reportUnknownVariableType]
         conn = cast(asyncpg.Connection, connection)
         async with conn.transaction(readonly=True):
-            async for record in conn.cursor(query, *values):
+            async for record in conn.cursor(query, *values):  # pyright: ignore[reportUnknownVariableType]
                 yield record
 
 
@@ -46,7 +47,7 @@ async def one(
         The selected row if one was found, or None otherwise.
     """
     query, values = __build_query(table, columns, **conditions)
-    return await pool.fetchrow(query, *values)
+    return cast(asyncpg.Record | None, await pool.fetchrow(query, *values))
 
 
 async def value(
@@ -66,7 +67,7 @@ async def value(
         The value of the selected cell if one was found, or None otherwise.
     """
     query, values = __build_query(table, (column,), **conditions)
-    return await pool.fetchval(query, *values)
+    return cast(Any, await pool.fetchval(query, *values))
 
 
 def __build_query(

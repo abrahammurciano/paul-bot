@@ -1,5 +1,6 @@
 import logging
 
+from disnake import Client
 from disnake.interactions import Interaction
 
 logger = logging.getLogger(__name__)
@@ -16,10 +17,7 @@ async def handle_error(error: Exception) -> None:
 
 class FriendlyError(Exception):
     def __init__(
-        self,
-        message: str,
-        inter: Interaction,
-        inner: Exception | None = None,
+        self, message: str, inter: Interaction[Client], inner: Exception | None = None
     ):
         super().__init__(message, inner)
         self.message = message

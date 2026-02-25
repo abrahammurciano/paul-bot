@@ -3,9 +3,9 @@ name = "paul-bot"
 version = "0.2.0"
 description = ""
 authors = [{ name = "Abraham Murciano", email = "abrahammurciano@gmail.com" }]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
-	"disnake>=2.4",
+	"disnake>=2.12",
 	"asyncpg>=0.27",
 	"dateparser>=1.1",
 	"discord-lumberjack>=1.0",
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-paul = "paul_bot.main:_main"
+paul = "paul_bot.__main__:main"
 
 [build-system]
 requires = ["hatchling>=1.27"]
@@ -23,13 +23,88 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "black>=25.1.0",
-    "mypy>=1.15.0",
-    "types-dateparser>=1.2.0",
-    "types-psutil>=6.1.0.20241221",
-    "vulture>=2.14",
+	"basedpyright>=1.38.1",
+	"mypy>=1.15.0",
+	"ruff>=0.15.2",
+	"types-dateparser>=1.2.0",
+	"types-psutil>=6.1.0.20241221",
+	"vulture>=2.14",
 ]
+
+[[tool.uv.index]]
+url = "https://artifactory.sddc.mobileye.com/artifactory/api/pypi/pypi/simple"
 
 [[tool.mypy.overrides]]
 module = ["asyncpg"]
 ignore_missing_imports = true
+
+[tool.basedpyright]
+allowedUntypedLibraries = ["asyncpg", "asyncpg.*"]
+reportUnusedCallResult = "none"
+reportAny = "none"
+reportIncompatibleUnannotatedOverride = "warning"
+reportUnannotatedClassAttribute = "none"
+reportUnusedParameter = "none"
+reportCallInDefaultInitializer = "none"
+reportExplicitAny = "none"
+reportInvalidCast = "none"
+reportUnknownLambdaType = "none"
+reportImportCycles = "hint"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+	"A001",
+	"A002",
+	"ANN401",
+	"C901",
+	"COM812",
+	"D100",
+	"D101",
+	"D102",
+	"D103",
+	"D104",
+	"D105",
+	"D106",
+	"D107",
+	"D203",
+	"D213",
+	"D413",
+	"E501",
+	"EM101",
+	"EM102",
+	"FBT001",
+	"G004",
+	"PLC0415",
+	"PLR0911",
+	"PLR0912",
+	"PLR2004",
+	"PT013",
+	"PYI025",
+	"S101",
+	"S104",
+	"S105",
+	"S311",
+	"S603",
+	"S608",
+	"TC001",
+	"TC002",
+	"TC003",
+	"TC006",
+	"TD002",
+	"TD003",
+	"TRY003",
+	"TRY400",
+]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["disnake.ext.commands.params.Param"]
+
+[tool.ruff.lint.pylint]
+max-args = 15

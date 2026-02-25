@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Iterable, Self
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Self
 
-from disnake import ButtonStyle, Emoji, MessageInteraction, PartialEmoji
+from disnake import ButtonStyle, Emoji, PartialEmoji
 from disnake.ext.commands import InteractionBot
+from disnake.interactions import MessageInteraction
 from disnake.ui import Button as DisnakeButton
 
 from paul_bot.application.mention import Mention, mentions_str
@@ -38,7 +40,7 @@ class BaseButton(ABC):
         custom_id: str,
         emoji: str | Emoji | PartialEmoji | None = None,
         row: int | None = None,
-    ):
+    ) -> None:
         self._style = style
         self._label = label
         self._custom_id = (
@@ -58,7 +60,7 @@ class BaseButton(ABC):
         """Create an instance of the button from an interaction. If the interaction does not match this kind of button, raise an InteractionMismatchError."""
 
     @property
-    def button(self) -> DisnakeButton:
+    def button(self) -> DisnakeButton[None]:
         return DisnakeButton(
             style=self._style,
             label=self._label,
@@ -91,7 +93,7 @@ class BaseButton(ABC):
         try:
             return int(custom_id.removesuffix(cls._CUSTOM_ID_SUFFIX))
         except ValueError:
-            raise InteractionMismatchError(cls, inter)
+            raise InteractionMismatchError(cls, inter) from None
 
 
 class InteractionMismatchError(ValueError):

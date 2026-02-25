@@ -1,19 +1,21 @@
 import logging
 import re
+from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Callable
 
 import dateparser
+from disnake import Client
 from disnake.interactions import ApplicationCommandInteraction as Interaction
 
-from ..application import Mention, Poll
+from paul_bot.application import Mention, Poll
+
 from .errors import FriendlyError
 
 logger = logging.getLogger(__name__)
 
 
-def parse_options(sep: str = "|") -> Callable[[Interaction, str], list[str]]:
-    def converter(inter: Interaction, options: str) -> list[str]:
+def parse_options(sep: str = "|") -> Callable[[Interaction[Client], str], list[str]]:
+    def converter(inter: Interaction[Client], options: str) -> list[str]:
         result = [option.strip() for option in options.split(sep) if option]
         if len(result) > Poll.MAX_OPTIONS:
             raise FriendlyError(
@@ -28,8 +30,7 @@ def parse_options(sep: str = "|") -> Callable[[Interaction, str], list[str]]:
                 )
         if not result:
             logger.warning(
-                f'Unable to parse any options out of the input string "{options}".'
-                "Using default Yes/No options instead."
+                f'Unable to parse any options out of the input string "{options}". Using default Yes/No options instead.'
             )
             return ["Yes", "No"]
         return result
@@ -40,7 +41,7 @@ def parse_options(sep: str = "|") -> Callable[[Interaction, str], list[str]]:
 RELATIVE_DATE_PARSE_FIX = re.compile(r"([dhms])(\d)")
 
 
-def parse_expires(inter: Interaction, expires: str) -> datetime | None:
+def parse_expires(inter: Interaction[Client], expires: str) -> datetime | None:
     # Workaround for https://github.com/scrapinghub/dateparser/issues/1012
     if expires.lower() == "never":
         return None
@@ -67,8 +68,8 @@ _MENTION_REGEX = re.compile(r"<(@[!&])?(\d+)>")
 _NAMED_MENTION_REGEX = re.compile(r"@[^!&@,\s][^\s,@<]*")
 
 
-def parse_mentions(inter: Interaction, string: str) -> list[Mention]:
-    result = []
+def parse_mentions(inter: Interaction[Client], string: str) -> list[Mention]:
+    result: list[Mention] = []
     result.extend(
         Mention(prefix, int(mention_id))
         for prefix, mention_id in _MENTION_REGEX.findall(string)
@@ -82,13 +83,13 @@ def parse_mentions(inter: Interaction, string: str) -> list[Mention]:
     return result
 
 
-def length_bound_str(max: int, min: int = 0) -> Callable[[Interaction, str], str]:
-    def converter(inter: Interaction, string: str) -> str:
+def length_bound_str(
+    max: int, min: int = 0
+) -> Callable[[Interaction[Client], str], str]:
+    def converter(inter: Interaction[Client], string: str) -> str:
         if len(string) > max or len(string) < min:
             raise FriendlyError(
-                f"Expected a string of length between {min} and {max}"
-                f' characters.\nInstead got "{string}" which is {len(string)}'
-                " characters.",
+                f'Expected a string of length between {min} and {max} characters.\nInstead got "{string}" which is {len(string)} characters.',
                 inter,
             )
         return string

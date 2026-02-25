@@ -1,9 +1,10 @@
+from collections.abc import Generator, Sequence
 from itertools import count
-from typing import Any, Generator, Sequence
+from typing import Any
 
 
 def where(columns: Sequence[str]) -> str:
-    """Construct a where clause where if `columns` contains the columns A, B, C, ..., the resulting string would look like " WHERE A = $1 AND B = $2 AND C = $3 AND ..."
+    """Construct a where clause where if `columns` contains the columns A, B, C, ..., the resulting string would look like " WHERE A = $1 AND B = $2 AND C = $3 AND ...".
 
     Args:
         columns: A sequence of column names to be included in the where clause.
@@ -33,7 +34,7 @@ def split_dict(dictionary: dict[str, Any]) -> tuple[tuple[str, ...], tuple[Any, 
     return keys, values
 
 
-def placeholders(n: int | None = None) -> Generator[str, None, None]:
+def placeholders(n: int | None = None) -> Generator[str]:
     """Get n placeholders for asyncpg. E.g. $1, $2, etc.
 
     Args:

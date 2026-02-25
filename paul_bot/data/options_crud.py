@@ -1,18 +1,17 @@
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
 
-from ..application.option import Option
+from paul_bot.application.option import Option
+
 from . import sql
 from .cruds import Crud
 
 
 class OptionsCrud(Crud):
     async def add(self, options: Iterable[Option]) -> Mapping[int, int]:
-        """Adds options of a poll to the database.
+        """Add options of a poll to the database.
 
         Args:
-            labels: The labels of the options.
-            poll: The poll the options belong to.
-            author_id: The ID of the person who added the option. If this option existed since the poll's creation, this should be None. (Default is None)
+            options: The options to add to the database.
 
         Returns:
             A mapping of the option index to the option's ID as assigned by the database.
@@ -25,6 +24,6 @@ class OptionsCrud(Crud):
                 (option.label, option.poll.poll_id, option.author_id, option.index)
                 for option in options
             ],
-            returning="id, index",
+            returning=("id", "index"),
         )
         return {r["index"]: r["id"] for r in records}

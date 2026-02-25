@@ -1,10 +1,12 @@
+from collections.abc import Generator, Iterable
 from datetime import datetime
 from itertools import count
-from typing import TYPE_CHECKING, Generator, Iterable
+from typing import TYPE_CHECKING
 
 import disnake
 
-from ...application.mention import Mention, mentions_str
+from paul_bot.application.mention import Mention, mentions_str
+
 from .colours import get_colour
 from .poll_embed_base import PollEmbedBase
 
@@ -15,10 +17,7 @@ if TYPE_CHECKING:
 class PollEmbed(PollEmbedBase):
     """Base class for poll embeds."""
 
-    def __init__(
-        self,
-        poll: "Poll",
-    ):
+    def __init__(self, poll: Poll) -> None:
         """Construct an Embed for the poll.
 
         Args:
@@ -58,7 +57,7 @@ class PollEmbed(PollEmbedBase):
             if s is not None
         )
 
-    def option_prefixes(self) -> Generator[str, None, None]:
+    def option_prefixes(self) -> Generator[str]:
         return (f"{i}." for i in count(start=1))
 
     def add_options(self) -> None:
@@ -96,7 +95,7 @@ class PollEmbed(PollEmbedBase):
         bar = get_colour(index).emoji * squares + self.vote_bar_background * (
             self.vote_bar_length - squares
         )
-        return f"{added_by}{bar}`{round(proportion*100)}% ({option_votes})`"
+        return f"{added_by}{bar}`{round(proportion * 100)}% ({option_votes})`"
 
     def add_details(self) -> None:
         """Add poll details to the end of the embed."""
@@ -104,7 +103,7 @@ class PollEmbed(PollEmbedBase):
             self.add_field(name="---", value="\n".join(self.details), inline=False)
 
     def closing_text(self, expires: datetime | None) -> str:
-        """Some text describing when the poll will expire.
+        """Generate text describing when the poll will expire.
 
         Args:
             expires: The time when the poll will expire. If None, the poll does not expire.

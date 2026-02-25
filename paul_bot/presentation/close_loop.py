@@ -4,7 +4,8 @@ from asyncio import CancelledError, Event, Task, create_task, sleep
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from ..application import Poll
+from paul_bot.application import Poll
+from paul_bot.utils import background
 
 if TYPE_CHECKING:
     from .paul import Paul
@@ -24,14 +25,14 @@ class CloseLoop:
         """Check if the newly added poll is scheduled to expire sooner than the current next expiration."""
         if poll.closed or not poll.expires:
             return
-        if self.__next_expire is None or poll.expires < self.__next_expire:
+        if poll.expires < self.__next_expire:
             if self.__wait_task is not None:
                 self.__wait_task.cancel()
             self.__poll_added.set()
 
     def start(self) -> None:
         """Start the loop."""
-        create_task(self.__loop())
+        background(self.__loop())
 
     async def __loop(self) -> None:
         while True:
@@ -47,7 +48,7 @@ class CloseLoop:
                 continue
             if poll.closed:
                 continue
-            create_task(self.__close_poll(poll))
+            background(self.__close_poll(poll))
 
     async def __wait(self) -> None:
         """Wait for the next poll to expire, updating the wait task. If the wait task is cancelled while waiting, CancelledError will be raised."""

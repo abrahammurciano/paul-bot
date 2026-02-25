@@ -1,20 +1,25 @@
 import logging
+from collections.abc import Iterable
 from datetime import UTC, datetime, timedelta
-from typing import Any, Iterable
+from typing import Any
 
 import psutil
-from disnake import Activity, ActivityType, Event, MessageInteraction
+from disnake import Activity, ActivityType, Client, Event
 from disnake.errors import Forbidden, NotFound
 from disnake.ext.commands.bot import InteractionBot
-from disnake.ext.commands.params import Param
+from disnake.ext.commands.params import (
+    Param,  # pyright: ignore[reportUnknownVariableType]
+)
 from disnake.guild import Guild
+from disnake.interactions import MessageInteraction
 from disnake.interactions.application_command import GuildCommandInteraction
 from disnake.interactions.base import Interaction
 from disnake.interactions.modal import ModalInteraction
 from disnake.message import Message
 
-from ..application import Mention, Poll
-from ..application.option import Option
+from paul_bot.application import Mention, Poll
+from paul_bot.application.option import Option
+
 from .close_loop import CloseLoop
 from .command_params import PollCommandParams
 from .converters import length_bound_str, parse_expires, parse_mentions, parse_options
@@ -42,7 +47,7 @@ class Paul:
             return
         self.__on_ready_triggered = True
         logger.info(
-            f"\n{self.__bot.user.name} has connected to Discord! (mem: {psutil.Process().memory_info().rss // (1024*1024)} MB)\n"
+            f"\n{self.__bot.user.name} has connected to Discord! (mem: {psutil.Process().memory_info().rss // (1024 * 1024)} MB)\n"
         )
         self.__close_queue.start()
         self.__total_poll_count = await Poll.count()
@@ -63,7 +68,7 @@ class Paul:
 
     async def new_poll(
         self, params: PollCommandParams, author_id: int, message: Message
-    ):
+    ) -> None:
         try:
             poll = await Poll.create_poll(params, author_id, message)
             self.__total_poll_count += 1
@@ -73,20 +78,20 @@ class Paul:
         except RuntimeError as e:
             await message.edit(
                 embed=PollEmbedBase(
-                    f'Something went wrong... "{params.question}" could not be created. Please try again.\n\n**Reason:** {e}\n\nIf the problem persists, please open an issue on [GitHub](https://github.com/abrahammurciano/paul-bot) or ask for help on the [Discord Server](https://discord.com/invite/mzhSRnnY78).',
+                    f'Something went wrong... "{params.question}" could not be created. Please try again.\n\n**Reason:** {e}\n\nIf the problem persists, please open an issue on [GitHub](https://github.com/abrahammurciano/paul-bot) or ask for help on the [Discord Server](https://discord.com/invite/mzhSRnnY78).'
                 )
             )
 
     async def add_poll_option(
-        self, poll: Poll, label: str, author_id: int, inter: ModalInteraction
-    ):
+        self, poll: Poll, label: str, author_id: int, inter: ModalInteraction[Client]
+    ) -> None:
         """Add a new option to the given poll.
 
         Args:
             poll: The poll to add the option to.
             label: The label of the option.
             author_id: The ID of the user who added the option.
-            message: The message containing the poll. If omitted, it will be fetched asynchronously.
+            inter: The modal interaction containing the poll message.
         """
         if len(poll.options) == Poll.MAX_OPTIONS:
             raise FriendlyError("You can't add more options to this poll.", inter)
@@ -160,13 +165,13 @@ async def on_error(event_method: str, *args: Any, **kwargs: Any) -> None:
 
 
 @bot.event
-async def on_slash_command_error(inter: Interaction, error: Exception) -> None:
+async def on_slash_command_error(_: Interaction[Client], error: Exception) -> None:
     await handle_error(error)
 
 
 @bot.slash_command(desc="Create a poll")
 async def poll(
-    inter: GuildCommandInteraction,
+    inter: GuildCommandInteraction[Client],
     question: str = Param(desc="Ask a question...", converter=length_bound_str(254)),
     options: Iterable[str] = Param(
         desc="Separate each option with a pipe (|). By default the options are yes or no.",
@@ -198,11 +203,11 @@ async def poll(
                 Mention.role(inter.guild.default_role.id)
                 if inter.guild
                 else Mention.member(inter.user.id)
-            ),
+            )
         ],
         converter=parse_mentions,
     ),
-):
+) -> None:
     params = PollCommandParams(
         question,
         options,
@@ -222,7 +227,7 @@ async def poll(
 
 
 @bot.listen(Event.button_click)
-async def on_button_click(inter: MessageInteraction[InteractionBot]):
+async def on_button_click(inter: MessageInteraction[InteractionBot]) -> None:
     try:
         button = await buttons.factory(paul, inter)
         await button.callback(inter)

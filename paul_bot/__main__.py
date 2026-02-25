@@ -1,4 +1,48 @@
-from .main import _main
+import asyncio
+import logging
+import os
+
+from discord_lumberjack.handlers import DiscordChannelHandler
+from dotenv import load_dotenv
+
+from . import application
+from .presentation.paul import bot
+from .utils import EmbedLongMessageCreator
+
+load_dotenv()
+token = os.environ["BOT_TOKEN"]
+
+logger = logging.getLogger("paul_bot")
+logger.setLevel(logging.DEBUG)
+stderr_handler = logging.StreamHandler()
+stderr_handler.setLevel(logging.INFO)
+logger.addHandler(stderr_handler)
+file_handler = logging.FileHandler("output.log")
+file_handler.setLevel(logging.DEBUG)
+logger.addHandler(file_handler)
+if err_channel := os.environ.get("ERR_CHANNEL"):
+    logger.addHandler(
+        DiscordChannelHandler(
+            token, int(err_channel), logging.ERROR, EmbedLongMessageCreator()
+        )
+    )
+if dbg_channel := os.environ.get("DBG_CHANNEL"):
+    logger.addHandler(
+        DiscordChannelHandler(
+            token, int(dbg_channel), logging.DEBUG, EmbedLongMessageCreator()
+        )
+    )
+
+
+async def async_main() -> None:
+    logger.info("Starting Paul...")
+    await application.init()
+    await bot.start(token)
+
+
+def main() -> None:
+    asyncio.run(async_main())
+
 
 if __name__ == "__main__":
-    _main()
+    main()

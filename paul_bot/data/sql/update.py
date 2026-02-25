@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, LiteralString
 
 import asyncpg
 
@@ -6,8 +6,8 @@ from . import util
 
 
 async def update(
-    pool: asyncpg.Pool, table: str, set: dict[str, Any], where: dict[str, Any]
-):
+    pool: asyncpg.Pool, table: LiteralString, set: dict[str, Any], where: dict[str, Any]
+) -> None:
     """Update rows in a table setting the values determined by the dictionary `set` of the columns which match the conditions defined in the `where` dictionary.
 
     Args:
@@ -19,11 +19,10 @@ async def update(
     set_columns, set_values = util.split_dict(set)
     placeholders = util.placeholders()
     set_clause = ", ".join(f"{column} = {next(placeholders)}" for column in set_columns)
-    where_columns, where_values = util.split_dict(where) if where else ("1", 1)
+    where_columns, where_values = util.split_dict(where) if where else (("1",), (1,))
     where_clause = " AND ".join(
         f"{column} = {next(placeholders)}" for column in where_columns
     )
     query = f"UPDATE {table} SET {set_clause} WHERE {where_clause}"
-    async with pool.acquire() as conn:
-        async with conn.transaction():
-            await conn.execute(query, *set_values, *where_values)
+    async with pool.acquire() as conn, conn.transaction():  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
+        await conn.execute(query, *set_values, *where_values)  # pyright: ignore[reportUnknownMemberType]

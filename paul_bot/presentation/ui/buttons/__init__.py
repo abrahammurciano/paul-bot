@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from disnake import MessageInteraction
 from disnake.ext.commands import InteractionBot
+from disnake.interactions import MessageInteraction
 
 from .add_option_button import AddOptionButton
 from .base_button import BaseButton, InteractionMismatchError
@@ -15,11 +15,11 @@ if TYPE_CHECKING:
     from paul_bot.presentation.paul import Paul
 
 __all__ = (
-    "BaseButton",
     "AddOptionButton",
+    "BaseButton",
     "ClosePollButton",
-    "VoteButton",
     "SeeVotesButton",
+    "VoteButton",
 )
 
 

@@ -34,7 +34,7 @@ class ClosePollButton(BaseButton):
     @override
     @classmethod
     async def from_interaction(
-        cls, paul: Paul, inter: MessageInteraction
+        cls, paul: Paul, inter: MessageInteraction[InteractionBot]
     ) -> ClosePollButton:
         poll = await Poll.fetch_by_id(cls._parse_custom_id(inter))
         if poll is None:
@@ -49,5 +49,6 @@ class ClosePollButton(BaseButton):
         await self.__paul.close_poll_now(self.__poll)
 
     @property
+    @override
     def _no_permission_message(self) -> str:
         return f"You do not have permission to close the poll. Only {self.__author_mention} may do that."

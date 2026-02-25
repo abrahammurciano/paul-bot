@@ -4,14 +4,15 @@ from typing import TYPE_CHECKING, Self, override
 
 import disnake
 from disnake.enums import ButtonStyle
+from disnake.ext.commands import InteractionBot
 from disnake.interactions.message import MessageInteraction
 
 from paul_bot.application.poll import Poll
+from paul_bot.presentation.embeds.question_results_embed import QuestionResultsEmbed
+from paul_bot.presentation.embeds.see_option_results_embed import SeeOptionResultsEmbed
 from paul_bot.presentation.errors import FriendlyError
 from paul_bot.utils import chunks
 
-from ...embeds.question_results_embed import QuestionResultsEmbed
-from ...embeds.see_option_results_embed import SeeOptionResultsEmbed
 from .base_button import BaseButton
 
 if TYPE_CHECKING:
@@ -34,7 +35,9 @@ class SeeVotesButton(BaseButton):
 
     @override
     @classmethod
-    async def from_interaction(cls, paul: Paul, inter: MessageInteraction) -> Self:
+    async def from_interaction(
+        cls, paul: Paul, inter: MessageInteraction[InteractionBot]
+    ) -> Self:
         poll = await Poll.fetch_by_id(cls._parse_custom_id(inter))
         if poll is None:
             raise FriendlyError(
@@ -43,7 +46,7 @@ class SeeVotesButton(BaseButton):
         return cls(poll)
 
     @override
-    async def _on_click(self, inter: MessageInteraction) -> None:
+    async def _on_click(self, inter: MessageInteraction[disnake.Client]) -> None:
         await inter.response.defer(with_message=True, ephemeral=True)
         embeds: list[disnake.Embed] = [QuestionResultsEmbed(self.__poll)]
         embeds.extend(

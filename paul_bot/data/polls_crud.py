@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, cast
 
 import asyncpg
 
-from ..application.mention import Mention
-from ..application.option import Option
+from paul_bot.application.mention import Mention
+from paul_bot.application.option import Option
+
 from . import sql
 from .cruds import Crud
 
@@ -93,9 +95,12 @@ class PollsCrud(Crud):
         Returns:
             The poll containing the given option, if found.
         """
-        record = await self.pool.fetchrow(
-            f"SELECT {', '.join(self._COLUMNS)} FROM {self._VIEW} WHERE id = (SELECT poll_id FROM options WHERE id = $1)",
-            option_id,
+        record = cast(
+            asyncpg.Record | None,
+            await self.pool.fetchrow(
+                f"SELECT {', '.join(self._COLUMNS)} FROM {self._VIEW} WHERE id = (SELECT poll_id FROM options WHERE id = $1)",
+                option_id,
+            ),
         )
         return self.__init_poll(record) if record else None
 
@@ -135,8 +140,11 @@ class PollsCrud(Crud):
 
     async def next_to_expire(self) -> Poll | None:
         """Get the poll that will expire next."""
-        record = await self.pool.fetchrow(
-            f"SELECT {', '.join(self._COLUMNS)} FROM {self._VIEW} WHERE expires IS NOT NULL AND NOT closed ORDER BY expires LIMIT 1"
+        record = cast(
+            asyncpg.Record | None,
+            await self.pool.fetchrow(
+                f"SELECT {', '.join(self._COLUMNS)} FROM {self._VIEW} WHERE expires IS NOT NULL AND NOT closed ORDER BY expires LIMIT 1"
+            ),
         )
         return self.__init_poll(record) if record else None
 
@@ -168,25 +176,29 @@ class PollsCrud(Crud):
             for option in options
         ]
 
-    def __init_poll(self, record: asyncpg.Record) -> "Poll":
+    def __init_poll(self, record: asyncpg.Record) -> Poll:
         # must be imported here to avoid circular imports
-        from ..application.poll import Poll
+        from paul_bot.application.poll import Poll
 
         poll = Poll(
-            record["id"],
-            record["question"],
-            record["expires"],
-            record["author"],
-            record["allow_multiple_votes"],
-            (
+            poll_id=record["id"],
+            question=record["question"],
+            expires=record["expires"],
+            author_id=record["author"],
+            allow_multiple_votes=record["allow_multiple_votes"],
+            allowed_vote_viewers=(
                 Mention(mention[0], mention[1])
                 for mention in record["allowed_vote_viewers"]
             ),
-            (Mention(mention[0], mention[1]) for mention in record["allowed_editors"]),
-            (Mention(mention[0], mention[1]) for mention in record["allowed_voters"]),
-            record["message"],
-            record["channel"],
-            record["closed"],
+            allowed_editors=(
+                Mention(mention[0], mention[1]) for mention in record["allowed_editors"]
+            ),
+            allowed_voters=(
+                Mention(mention[0], mention[1]) for mention in record["allowed_voters"]
+            ),
+            message_id=record["message"],
+            channel_id=record["channel"],
+            closed=record["closed"],
         )
         for option in self.__parse_options(poll, record["options"]):
             poll.add_option(option)

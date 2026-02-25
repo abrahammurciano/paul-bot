@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import asyncio
-from typing import TYPE_CHECKING, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
-from .. import data
+from paul_bot import data
+from paul_bot.utils import background
 
 if TYPE_CHECKING:
     from paul_bot.application.poll import Poll
@@ -20,7 +21,7 @@ class Option:
         poll: Poll,
         index: int,
         author_id: int | None,
-    ):
+    ) -> None:
         self.__option_id = option_id
         self.__label = label
         self.__votes = set(votes)
@@ -85,7 +86,7 @@ class Option:
         Args:
             voter_id: The ID of the user whose vote is to be deleted.
         """
-        asyncio.create_task(
+        background(
             data.cruds.votes_crud.delete_users_votes_from_option(
                 self.option_id, voter_id
             )
@@ -100,7 +101,7 @@ class Option:
         """
         if not self.poll.allow_multiple_votes:
             self.poll.remove_votes_from(voter_id)
-        asyncio.create_task(data.cruds.votes_crud.add(self.option_id, voter_id))
+        background(data.cruds.votes_crud.add(self.option_id, voter_id))
         self.__votes.add(voter_id)
 
     def toggle_vote(self, voter_id: int) -> None:
@@ -117,7 +118,7 @@ class Option:
     @classmethod
     async def create_option(
         cls, label: str, poll: Poll, author_id: int | None = None
-    ) -> "Option":
+    ) -> Option:
         """Create a new option for the given poll and add it to the database.
 
         Args:
@@ -132,11 +133,8 @@ class Option:
 
     @classmethod
     async def create_options(
-        cls,
-        labels: Iterable[str],
-        poll: Poll,
-        author_id: int | None = None,
-    ) -> list["Option"]:
+        cls, labels: Iterable[str], poll: Poll, author_id: int | None = None
+    ) -> list[Option]:
         """Create new Option objects for the given poll and add them to the database.
 
         Args:
@@ -156,5 +154,5 @@ class Option:
         ]
         option_ids = await data.cruds.options_crud.add(options)
         for option in options:
-            option.__option_id = option_ids[option.index]
+            option.__option_id = option_ids[option.index]  # noqa: SLF001
         return options

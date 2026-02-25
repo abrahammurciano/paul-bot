@@ -1,6 +1,7 @@
 from disnake import Embed
 
-from ...application.option import Option
+from paul_bot.application.option import Option
+
 from .colours import get_colour
 
 
@@ -14,17 +15,17 @@ class SeeOptionResultsEmbed(Embed):
         )
 
     def split(self) -> list[Embed]:
-        LIMIT = 5700  # 6000 actually, but just to be safe and accounting for the title and vote count
-        if len(self) < LIMIT:
+        limit = 5700  # 6000 actually, but just to be safe and accounting for the title and vote count
+        if len(self) < limit:
             return [self]
         desc = str(self.description)
-        embeds = []
+        embeds: list[Embed] = []
         start = end = 0
         while end < len(desc):
             try:
                 end = next(
-                    (i for i in range(start + LIMIT - 1, -1, -1) if desc[i] == " "),
-                    start + LIMIT,
+                    (i for i in range(start + limit - 1, -1, -1) if desc[i] == " "),
+                    start + limit,
                 )
             except IndexError:
                 end = len(desc)

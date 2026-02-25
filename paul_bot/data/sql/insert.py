@@ -1,5 +1,6 @@
+from collections.abc import Iterable, Sequence
 from itertools import chain
-from typing import Any, Iterable, Sequence, overload
+from typing import Any, cast, overload
 
 import asyncpg
 
@@ -25,7 +26,7 @@ async def one(
     on_conflict: str | None = None,
     returning: Iterable[str],
     **fields: Any,
-) -> tuple: ...
+) -> tuple[Any, ...]: ...
 
 
 @overload
@@ -73,7 +74,7 @@ async def many(
     pool: asyncpg.Pool,
     table: str,
     columns: Iterable[str],
-    records: Sequence[Sequence],
+    records: Sequence[Sequence[object]],
     *,
     on_conflict: str | None = None,
     returning: str,
@@ -85,7 +86,7 @@ async def many(
     pool: asyncpg.Pool,
     table: str,
     columns: Iterable[str],
-    records: Sequence[Sequence],
+    records: Sequence[Sequence[object]],
     *,
     on_conflict: str | None = None,
     returning: Iterable[str],
@@ -97,7 +98,7 @@ async def many(
     pool: asyncpg.Pool,
     table: str,
     columns: Iterable[str],
-    records: Sequence[Sequence],
+    records: Sequence[Sequence[object]],
     *,
     on_conflict: str | None = None,
     returning: None = None,
@@ -108,11 +109,11 @@ async def many(
     pool: asyncpg.Pool,
     table: str,
     columns: Iterable[str],
-    records: Sequence[Sequence],
+    records: Sequence[Sequence[object]],
     *,
     on_conflict: str | None = None,
     returning: str | Iterable[str] | None = None,
-) -> list[asyncpg.Record] | list[Any] | None:
+) -> list[asyncpg.Record] | list[object] | None:
     """Insert many rows into a database.
 
     Args:
@@ -137,20 +138,20 @@ async def many(
         on_conflict,
         returning,
     )
-    async with pool.acquire() as conn:
-        async with conn.transaction():
-            results = await conn.fetch(query, *chain(*records))
-            if returning is None:
-                return None
-            if results and len(results[0]) > 1:
-                return results
-            return [result[0] for result in results]
+    async with pool.acquire() as conn, conn.transaction():  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        results = cast(
+            list[asyncpg.Record] | None,
+            await conn.fetch(query, *chain(*records)),  # pyright: ignore[reportUnknownMemberType]
+        )
+        if returning is None:
+            return None
+        if results and len(results[0]) > 1:
+            return results
+        return [result[0] for result in results or ()]
 
 
 def __with_conflict_returning(
-    query: str,
-    on_conflict: str | None,
-    returning: str | Iterable[str] | None,
+    query: str, on_conflict: str | None, returning: str | Iterable[str] | None
 ) -> str:
     """Return a query with an ON CONFLICT clause and a RETURNING clause if specified.
 
