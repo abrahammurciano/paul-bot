@@ -168,6 +168,6 @@ def __with_conflict_returning(
     if returning:
         query += (
             " RETURNING"
-            f" {returning if isinstance(returning, str) else ' (' + ', '.join(returning) + ')'}"
+            f" {returning if isinstance(returning, str) else ', '.join(returning)}"
         )
     return query
